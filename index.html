@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
+<title>QAVLI</title>
+<style>
+:root{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#667089;--line:#dfe4ef;--brand:#14213d;--accent:#fca311;--mine:#fde3b0;--other:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1426;--card:#141f38;--ink:#edf1fa;--mute:#93a0bd;--line:#26334f;--brand:#0c1426;--mine:#6b4a0c;--other:#1b2845}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.v{display:none;height:100%;flex-direction:column;max-width:640px;margin:0 auto;background:var(--bg)}
+.v.on{display:flex}
+.pad{padding:calc(32px + env(safe-area-inset-top)) 24px 24px;justify-content:center}
+.logo{width:64px;height:64px;border-radius:50% 50% 50% 14px;background:var(--accent);color:var(--brand);font:800 38px/64px Georgia,serif;text-align:center;margin-bottom:12px}
+h1{margin:0 0 4px;font:700 28px Georgia,serif;letter-spacing:.5px}
+.mute{color:var(--mute);margin:0 0 20px}
+input{width:100%;font:inherit;padding:13px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:13px 16px;background:var(--accent);color:#14213d;font-weight:600}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.err{color:#d62839;min-height:22px;margin:6px 0}
+.bar{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--brand);color:#fff}
+.bar h2{margin:0;font-size:18px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar button{background:rgba(255,255,255,.14);color:#fff;padding:8px 12px}
+.tools{padding:12px 14px 4px}
+.tools input{margin:0}
+.scroll{flex:1;overflow-y:auto;padding:6px 8px}
+.row{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);font-weight:400;padding:11px 10px;border-radius:12px}
+.row:hover{background:var(--card)}
+.row b{display:block}
+.row small{color:var(--mute)}
+.av{width:44px;height:44px;border-radius:50%;background:var(--brand);color:var(--accent);display:grid;place-items:center;font:700 18px Georgia,serif;flex:none;border:2px solid var(--accent)}
+.empty{color:var(--mute);text-align:center;padding:30px 20px}
+#msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:80%;align-self:flex-start;background:var(--other);padding:8px 12px;border-radius:16px 16px 16px 4px;overflow-wrap:anywhere;border:1px solid var(--line)}
+.msg.me{align-self:flex-end;background:var(--mine);border-radius:16px 16px 4px 16px}
+.msg a{color:inherit;text-decoration:underline}
+.who{display:block;font-size:13px;color:var(--mute)}
+.time{display:block;text-align:right;font-size:11px;color:var(--mute);font-style:normal}
+form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+form input{margin:0}
+</style>
+</head>
+<body>
+
+<div id="vauth" class="v on pad">
+  <div class="logo">Q</div>
+  <h1>QAVLI</h1>
+  <p class="mute">Sign in to start chatting.</p>
+  <input id="em" type="email" placeholder="Email" autocomplete="email">
+  <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
+  <div class="err" id="aerr" role="alert"></div>
+  <button id="bin">Sign in</button>
+  <p></p>
+  <button id="bup" class="sec">Create account</button>
+</div>
+
+<div id="vsetup" class="v pad">
+  <div class="logo">Q</div>
+  <h1>Your profile</h1>
+  <p class="mute">Friends find you by username.</p>
+  <input id="un" placeholder="Username (a-z, 0-9, _)" maxlength="20" autocapitalize="none">
+  <input id="dn" placeholder="Display name" maxlength="40">
+  <div class="err" id="serr" role="alert"></div>
+  <button id="bsave">Save profile</button>
+</div>
+
+<div id="vhome" class="v">
+  <div class="bar"><h2>QAVLI</h2><button id="bgrp">New group</button><button id="out">Sign out</button></div>
+  <div class="tools"><input id="q" placeholder="Find a person by username" autocapitalize="none"></div>
+  <div class="scroll"><div id="res"></div><div id="list"></div></div>
+</div>
+
+<div id="vchat" class="v">
+  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="inv" hidden>Invite link</button></div>
+  <div id="msgs"></div>
+  <form id="f"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
+  authDomain: "qavli-37983.firebaseapp.com",
+  projectId: "qavli-37983",
+  appId: "1:168938701514:web:783d81a63d8e4423e56a33"
+};
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+const $ = s => document.querySelector(s);
+let me = null, prof = null, cur = null, unC = null, unL = null, names = {};
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
+function row(title, sub, onclick) {
+  const b = el('button', 'row'); b.append(el('div', 'av', (title || '?')[0].toUpperCase()));
+  const t = el('div'); t.append(el('b', '', title)); if (sub) t.append(el('small', '', sub));
+  b.append(t); b.onclick = onclick; return b;
+}
+async function ensureNames(ids) {
+  await Promise.all([...new Set(ids)].filter(i => i && !names[i]).map(async i => {
+    try { const s = await getDoc(doc(db, 'users', i)); names[i] = s.exists() ? s.data().displayName : 'User'; }
+    catch { names[i] = 'User'; }
+  }));
+}
+
+/* ---------- auth ---------- */
+const friendly = c => ({
+  'auth/invalid-credential': 'Wrong email or password.',
+  'auth/email-already-in-use': 'This email already has an account. Please sign in.',
+  'auth/weak-password': 'Password needs 6 or more characters.',
+  'auth/invalid-email': 'This email is not valid.',
+  'auth/operation-not-allowed': 'Email login is not turned on in Firebase yet.',
+  'auth/network-request-failed': 'No internet. Try again.'
+}[c] || 'Something went wrong (' + c + ')');
+
+async function doAuth(up) {
+  const email = $('#em').value.trim(), pw = $('#pw').value; $('#aerr').textContent = '';
+  if (!email || pw.length < 6) { $('#aerr').textContent = 'Enter an email and a password of 6+ characters.'; return; }
+  try { up ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); }
+  catch (e) { $('#aerr').textContent = friendly(e.code); }
+}
+$('#bin').onclick = () => doAuth(false);
+$('#bup').onclick = () => doAuth(true);
+$('#out').onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, async u => {
+  if (!u) {
+    me = prof = cur = null; if (unC) unC(); if (unL) unL(); unC = unL = null; show('vauth'); return;
+  }
+  if (me && me.uid === u.uid) return;
+  me = u;
+  try {
+    const s = await getDoc(doc(db, 'users', u.uid));
+    if (!s.exists()) return show('vsetup');
+    prof = s.data(); names[u.uid] = prof.displayName; home();
+  } catch (e) { $('#aerr').textContent = 'Could not load your profile (' + e.code + ')'; show('vauth'); }
+});
+
+$('#bsave').onclick = async () => {
+  const username = $('#un').value.trim().toLowerCase(), displayName = $('#dn').value.trim();
+  if (!/^[a-z0-9_]{3,20}$/.test(username) || !displayName) { $('#serr').textContent = 'Username: 3-20 letters, numbers or _. Display name is required.'; return; }
+  try {
+    await runTransaction(db, async t => {
+      const un = doc(db, 'usernames', username);
+      if ((await t.get(un)).exists()) throw new Error('taken');
+      t.set(un, { uid: me.uid });
+      t.set(doc(db, 'users', me.uid), { username, displayName });
+    });
+    prof = { username, displayName }; names[me.uid] = displayName; home();
+  } catch (e) { $('#serr').textContent = e.message === 'taken' ? 'That username is taken. Try another.' : 'Could not save (' + (e.code || e.message) + ')'; }
+};
+
+/* ---------- home ---------- */
+function home() {
+  show('vhome');
+  if (unL) unL();
+  unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => renderList(snap.docs),
+    () => { $('#list').textContent = 'Could not load chats. Check your internet.'; });
+  const j = new URLSearchParams(location.search).get('join');
+  if (j) { history.replaceState(null, '', location.pathname); joinLink(j); }
+}
+async function renderList(docs) {
+  const items = docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 9e12) - ((a.createdAt && a.createdAt.seconds) || 9e12));
+  await ensureNames(items.filter(c => !c.isGroup).map(c => c.members.find(m => m !== me.uid)));
+  const L = $('#list'); L.textContent = '';
+  if (!items.length) { L.append(el('p', 'empty', 'No chats yet. Search a username above or create a group.')); return; }
+  items.forEach(c => {
+    const t = c.isGroup ? c.name : (names[c.members.find(m => m !== me.uid)] || 'Chat');
+    L.append(row(t, c.isGroup ? 'Group, ' + c.members.length + ' members' : '', () => openChat(c, t)));
+  });
+}
+
+let st;
+$('#q').oninput = () => { clearTimeout(st); st = setTimeout(search, 300); };
+async function search() {
+  const q = $('#q').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, ''), R = $('#res'); R.textContent = '';
+  if (q.length < 2) return;
+  try {
+    const s = await getDocs(query(collection(db, 'users'), where('username', '>=', q), where('username', '<=', q + '\uf8ff'), limit(10)));
+    let n = 0;
+    s.forEach(d => { if (d.id === me.uid) return; n++; const p = d.data(); R.append(row(p.displayName, '@' + p.username, () => startDM(d.id, p.displayName))); });
+    if (!n) R.append(el('p', 'empty', 'No user found with that username.'));
+  } catch (e) { R.append(el('p', 'empty', 'Search failed (' + e.code + ')')); }
+}
+async function startDM(other, title) {
+  const m = [me.uid, other].sort(), id = m.join('_'), ref = doc(db, 'chats', id);
+  try { const s = await getDoc(ref); if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp() }); }
+  catch (e) { return alert('Could not start chat (' + e.code + ')'); }
+  $('#q').value = ''; $('#res').textContent = '';
+  openChat({ id, isGroup: false, members: m }, title);
+}
+$('#bgrp').onclick = async () => {
+  const n = (prompt('Group name') || '').trim().slice(0, 60); if (!n) return;
+  try {
+    const r = await addDoc(collection(db, 'chats'), { isGroup: true, name: n, members: [me.uid], createdBy: me.uid, createdAt: serverTimestamp() });
+    openChat({ id: r.id, isGroup: true, name: n, members: [me.uid] }, n);
+  } catch (e) { alert('Could not create group (' + e.code + ')'); }
+};
+async function joinLink(id) {
+  try {
+    const ref = doc(db, 'chats', id), s = await getDoc(ref);
+    if (!s.exists() || !s.data().isGroup) return alert('This invite link is not valid.');
+    const c = { id, ...s.data() };
+    if (c.members.includes(me.uid)) return openChat(c, c.name);
+    if (!confirm('Join the group "' + c.name + '"?')) return;
+    await updateDoc(ref, { members: arrayUnion(me.uid) });
+    openChat(c, c.name);
+  } catch (e) { alert('Could not join (' + e.code + ')'); }
+}
+
+/* ---------- chat ---------- */
+function openChat(c, title) {
+  cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
+  if (unC) unC();
+  unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(50)), async snap => {
+    const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
+    await ensureNames(ms.map(m => m.senderId));
+    if (cur && cur.id === c.id) renderMsgs(ms);
+  }, () => { $('#msgs').textContent = ''; $('#msgs').append(el('p', 'empty', 'Could not load messages. Go back and try again.')); });
+}
+function renderMsgs(ms) {
+  const M = $('#msgs'), near = M.scrollHeight - M.scrollTop - M.clientHeight < 150; M.textContent = '';
+  ms.forEach(m => {
+    const mine = m.senderId === me.uid, d = el('div', 'msg' + (mine ? ' me' : ''));
+    if (cur.isGroup && !mine) d.append(el('b', 'who', names[m.senderId] || 'Member'));
+    const t = el('span');
+    m.text.split(/(https?:\/\/[^\s]+)/g).forEach(p => {
+      if (/^https?:\/\//.test(p)) { const a = el('a', '', p); a.href = p; a.target = '_blank'; a.rel = 'noopener noreferrer'; t.append(a); }
+      else t.append(document.createTextNode(p));
+    });
+    const when = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    d.append(t, el('i', 'time', m.pending ? 'Sending...' : when));
+    M.append(d);
+  });
+  if (near) M.scrollTop = M.scrollHeight;
+}
+$('#f').onsubmit = e => {
+  e.preventDefault();
+  const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
+  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp() })
+    .catch(() => alert('Message not sent. Check your internet and try again.'));
+};
+$('#back').onclick = () => { if (unC) { unC(); unC = null; } cur = null; show('vhome'); };
+$('#inv').onclick = () => {
+  const l = location.origin + location.pathname + '?join=' + cur.id;
+  if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
+  else prompt('Copy invite link', l);
+};
+</script>
+</body>
+  </html>
+    
