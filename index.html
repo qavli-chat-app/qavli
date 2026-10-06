@@ -32,13 +32,13 @@ button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding
 button.sec { background: transparent; color: var(--ink); border: 1px solid var(--line); margin-top: 8px; }
 .err { color: #ea0038; font-size: 13px; text-align: center; min-height: 20px; margin-bottom: 10px; }
 
-/* Header & Navigation */
+/* Header & Fast Layout */
 .bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--header-bg); color: #fff; }
 .bar h2 { font-size: 18px; flex: 1; font-weight: 600; }
 .bar button { width: auto; padding: 8px 12px; font-size: 13px; background: rgba(255,255,255,0.15); color: #fff; }
 .tools { padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
 .tools input { margin: 0; padding: 10px; }
-.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; }
+.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; will-change: transform; }
 .row { display: flex; width: 100%; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; position: relative; cursor: pointer; }
 .row:active { background: var(--line); }
 .row b { display: block; font-size: 16px; }
@@ -59,7 +59,7 @@ form input { margin: 0; border-radius: 20px; padding: 12px 16px; }
 form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 .empty { color: var(--mute); text-align: center; padding: 40px 20px; font-size: 14px; }
 
-/* Bottom Tabs */
+/* Bottom WhatsApp Navigation Tabs */
 .tabs { display: flex; position: absolute; bottom: 0; left: 0; right: 0; background: var(--header-bg); border-top: 1px solid var(--line); height: 55px; }
 .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mute); font-size: 11px; background: none; border: 0; border-radius: 0; padding: 0; }
 .tab.act { color: var(--accent); font-weight: bold; }
@@ -73,7 +73,7 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 <div id="vauth" class="v on pad">
   <div class="logo">Q</div>
   <h1>QAVLI Pro</h1>
-  <p class="mute">Connect with friends instantly</p>
+  <p class="mute">Fast & Secure Chat</p>
   <input id="em" type="email" placeholder="Email">
   <input id="pw" type="password" placeholder="Password (6+ chars)">
   <div class="err" id="aerr"></div>
@@ -84,13 +84,13 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 <!-- SETUP PROFILE -->
 <div id="vsetup" class="v pad">
   <h1>Your Profile</h1>
-  <p class="mute">Enter your display name to continue</p>
+  <p class="mute">Enter display name</p>
   <input id="pname" type="text" placeholder="Your Name or Username">
   <div class="err" id="perr"></div>
   <button id="bprof">Save Profile</button>
 </div>
 
-<!-- MAIN HOME PAGE (CHATS / TABS) -->
+<!-- MAIN HOME -->
 <div id="vhome" class="v">
   <div class="bar">
     <h2 id="htitle">QAVLI Chats</h2>
@@ -103,7 +103,7 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 
   <div class="scroll" id="tabcontent"></div>
 
-  <!-- BOTTOM WHATSAPP TABS -->
+  <!-- TABS -->
   <div class="tabs">
     <button class="tab act" id="tchats">
       <span class="tab-icon">💬</span>
@@ -117,7 +117,6 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
       <span class="tab-icon">⭕</span>
       <span>Status</span>
     </button>
-
     <button class="tab" id="tprof">
       <span class="tab-icon">⚙️</span>
       <span>Profile</span>
@@ -130,8 +129,8 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
   <div class="bar">
     <button id="bback" style="width:auto; padding:6px 12px;">←</button>
     <h2 id="ctitle">Chat</h2>
-    <button class="call-btn" onclick="alert('Audio Call UI initialized!')">📞</button>
-    <button class="call-btn" onclick="alert('Video Call UI initialized!')">📹</button>
+    <button class="call-btn" onclick="alert('Voice Call feature ready')">📞</button>
+    <button class="call-btn" onclick="alert('Video Call feature ready')">📹</button>
   </div>
   <div id="msgs"></div>
   <form id="fm">
@@ -143,7 +142,7 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 <!-- NEW GROUP MODAL -->
 <div id="vgp" class="v pad">
   <h1>New Group</h1>
-  <p class="mute">Create a new group chat</p>
+  <p class="mute">Create group chat</p>
   <input id="gtitle" type="text" placeholder="Group Name">
   <div class="err" id="gerr"></div>
   <button id="bgc">Create Group</button>
@@ -225,7 +224,7 @@ onAuthStateChanged(auth, async u => {
     show('vsetup');
   } else {
     prof = snap.data();
-    await setDoc(doc(db, 'users', me.uid), { isOnline: true }, { merge: true });
+    setDoc(doc(db, 'users', me.uid), { isOnline: true }, { merge: true }).catch(() => {});
     loadHome();
   }
 });
@@ -302,11 +301,12 @@ async function switchTab(tab) {
 }
 
 async function loadChatsTab() {
-  const uSnap = await getDocs(collection(db, 'users'));
-  usersCache = [];
-  uSnap.forEach(d => { 
-    names[d.id] = d.data().name || 'User'; 
-    if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
+  getDocs(collection(db, 'users')).then(uSnap => {
+    usersCache = [];
+    uSnap.forEach(d => { 
+      names[d.id] = d.data().name || 'User'; 
+      if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
+    });
   });
 
   unL = onSnapshot(collection(db, 'chats'), snap => {
@@ -434,7 +434,7 @@ function loadStatusTab() {
         <div><b>My Status</b><small>Tap to add status update</small></div>
       </div>
       <p class="mute" style="text-align:left;">Recent updates</p>
-      <div class="empty">No recent status updates from your contacts.</div>
+      <div class="empty">No recent status updates from contacts.</div>
     </div>
   `;
 }
@@ -524,4 +524,4 @@ $('#bgc').onclick = async () => {
 };
 </script>
 </body>
-  </html>
+    </html>
