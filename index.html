@@ -5,10 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#14213d">
 <title>QAVLI</title>
-<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js">
-<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -49,67 +45,11 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 .time{display:block;text-align:right;font-size:11px;color:var(--mute);font-style:normal}
 form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
 form input{margin:0}
-
-[hidden]{display:none!important}
-.row>div:nth-child(2){flex:1;min-width:0}
-.row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dot{width:12px;height:12px;border-radius:50%;background:var(--accent);flex:none}
-.quote{border-left:3px solid var(--accent);padding:2px 8px;margin-bottom:4px;font-size:14px;color:var(--mute);background:rgba(128,128,128,.12);border-radius:6px}
-.quote b{display:block;font-size:12px}
-.del{opacity:.7;font-style:italic}
-.reacts{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
-.reacts span{font-size:13px;padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.18)}
-.reacts span.mine{outline:1px solid var(--accent)}
-.rbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--card);border-top:1px solid var(--line);font-size:14px}
-.rbar div{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rbar button{padding:6px 12px}
-#sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;z-index:9}
-#sheet.on{display:flex}
-#sbox{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
-.emo{display:flex;justify-content:space-around}
-.emo .e{background:transparent;font-size:26px;padding:6px 10px}
-.act{width:100%;text-align:left}
-
-.tab{display:none;flex:1;min-height:0;flex-direction:column}
-.tab.on{display:flex}
-.nav{display:flex;border-top:1px solid var(--line);background:var(--card);padding-bottom:env(safe-area-inset-bottom)}
-.nav button{flex:1;background:transparent;color:var(--mute);border-radius:0;padding:8px 4px;font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
-.nav button.on{color:var(--ink)}
-.nav button.on svg{stroke:var(--accent)}
-.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.srow{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);font-weight:400;padding:12px 14px;border-radius:12px;margin:2px 0}
-.srow>div:not(.av){flex:1;min-width:0}
-.srow b{display:block}.srow small{color:var(--mute)}
-.srow.hl{border:1px solid var(--accent);background:rgba(252,163,17,.12)}
-.soonrow{opacity:.6}
-.pill{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(128,128,128,.22);color:var(--mute);font-weight:500;flex:none}
-.sprof{display:flex;align-items:center;gap:14px;padding:18px 14px}
-.sprof small{color:var(--mute);display:block}
-.av.big{width:60px;height:60px;font-size:26px}
-.shead{padding:12px 14px 4px;color:var(--mute);font-size:13px;text-transform:uppercase;letter-spacing:.6px}
-.logout{margin:14px;width:calc(100% - 28px);color:#d62839}
-#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#14213d;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90%;text-align:center}
-#toast.on{opacity:1}
-.bar #back{font-size:24px;line-height:1;padding:4px 14px}
-.bar .ib{padding:8px 10px;font-size:17px;opacity:.55}
-form .ib{background:transparent;color:var(--ink);padding:8px;font-size:20px;opacity:.55}
-.act{display:flex;justify-content:space-between;align-items:center}
-#sbox>b{font-size:18px}
-.linkbox{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px;word-break:break-all;font-size:14px}
-.btnrow{display:flex;gap:8px;flex-wrap:wrap}.btnrow button{flex:1}
-.mlist{max-height:30vh;overflow:auto;padding:4px 0}.mlist div{padding:6px 2px;border-bottom:1px solid var(--line)}
-.empty button{margin-top:10px}
-.sk{height:58px;margin:8px 10px;border-radius:14px;background:linear-gradient(90deg,var(--card),var(--line),var(--card));background-size:200% 100%;align-self:stretch;flex:none}
-@media(prefers-reduced-motion:no-preference){.sk{animation:sh 1.3s linear infinite}@keyframes sh{to{background-position:-200% 0}}}
-.day{align-self:center;font-size:12px;color:var(--mute);background:var(--card);border:1px solid var(--line);padding:2px 12px;border-radius:12px;margin:6px 0}
-#offline{position:fixed;top:0;left:0;right:0;background:#d62839;color:#fff;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;font-size:13px;z-index:30}
 </style>
 </head>
 <body>
 
-<div id="vsplash" class="v on pad" style="align-items:center;text-align:center"><div class="logo">Q</div><h1>QAVLI</h1></div>
-
-<div id="vauth" class="v pad">
+<div id="vauth" class="v on pad">
   <div class="logo">Q</div>
   <h1>QAVLI</h1>
   <p class="mute">Sign in to start chatting.</p>
@@ -132,56 +72,21 @@ form .ib{background:transparent;color:var(--ink);padding:8px;font-size:20px;opac
 </div>
 
 <div id="vhome" class="v">
-  <div class="bar"><h2 id="htitle">Chats</h2><button id="bgrp">New group</button></div>
-
-  <div id="tab-chats" class="tab on">
-    <div class="tools"><input id="q" placeholder="Search chats or find people by username" autocapitalize="none"></div>
-    <div class="scroll"><div id="res"></div><div id="list"></div></div>
-  </div>
-
-  <div id="tab-status" class="tab"><div class="scroll">
-    <div class="srow soonrow" data-soon="Status updates"><div class="av">+</div><div><b>My status</b><small>Tap to add a status update</small></div><span class="pill">Soon</span></div>
-    <div class="shead">Recent updates</div>
-    <p class="empty">Status updates from your friends will appear here.</p>
-    <p class="empty"><span class="pill">Coming soon</span><br>Text, photo and video status that disappears after 24 hours.</p>
-  </div></div>
-
-  <div id="tab-calls" class="tab"><div class="scroll">
-    <div class="srow soonrow" data-soon="Voice and video calls"><div class="av">+</div><div><b>Start a call</b><small>Voice and video calls with friends</small></div><span class="pill">Soon</span></div>
-    <div class="shead">Recent</div>
-    <p class="empty">No calls yet.</p>
-    <p class="empty"><span class="pill">Coming soon</span><br>Voice and video calling needs extra servers, so it is not active in the free version.</p>
-  </div></div>
-
-  <div id="tab-settings" class="tab"><div class="scroll">
-    <div id="sprof" class="sprof"></div>
-    <div id="slist"></div>
-    <button id="out" class="sec logout">Sign out</button>
-  </div></div>
-
-  <nav class="nav">
-    <button id="n-chats" class="on" data-t="chats"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Chats</span></button>
-    <button id="n-status" data-t="status"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg><span>Status</span></button>
-    <button id="n-calls" data-t="calls"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg><span>Calls</span></button>
-    <button id="n-settings" data-t="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Settings</span></button>
-  </nav>
+  <div class="bar"><h2>QAVLI</h2><button id="bgrp">New group</button><button id="out">Sign out</button></div>
+  <div class="tools"><input id="q" placeholder="Find a person by username" autocapitalize="none"></div>
+  <div class="scroll"><div id="res"></div><div id="list"></div></div>
 </div>
 
 <div id="vchat" class="v">
-  <div class="bar"><button id="back" aria-label="Back">&#8249;</button><h2 id="ct"></h2><button class="ib" data-soon="Voice calls" aria-label="Voice call">&#128222;</button><button class="ib" data-soon="Video calls" aria-label="Video call">&#127909;</button><button id="info" hidden>Info</button></div>
+  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="inv" hidden>Invite link</button></div>
   <div id="msgs"></div>
-  <div id="rbar" class="rbar" hidden><div id="rtxt"></div><button id="rx" class="sec" type="button">X</button></div>
-  <form id="f"><button type="button" class="ib" data-soon="Attachments" aria-label="Attach">&#128206;</button><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button type="button" class="ib" data-soon="Voice messages" aria-label="Voice message">&#127908;</button><button>Send</button></form>
+  <form id="f"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
-
-<div id="offline" hidden>You are offline. Messages will send when you reconnect.</div>
-<div id="toast" role="status"></div>
-<div id="sheet"><div id="sbox"></div></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,arrayRemove,deleteField,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
@@ -189,33 +94,23 @@ const firebaseConfig = {
   projectId: "qavli-37983",
   appId: "1:168938701514:web:783d81a63d8e4423e56a33"
 };
-const app = initializeApp(firebaseConfig), auth = getAuth(app);
-let db; try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); } catch { db = getFirestore(app); }
-function lsGet(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } }
-function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 const $ = s => document.querySelector(s);
-const EMOJI = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F64F}'];
-let me = null, prof = null, cur = null, unC = null, unL = null, names = lsGet('qv_names', {}), chats = {}, lastMs = [], replyTo = null, lastReadAt = 0, msgLimit = 30, more = false, chatFilter = '';
+let me = null, prof = null, cur = null, unC = null, unL = null, names = {};
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
 function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
-function row(title, sub, onclick, dot) {
+function row(title, sub, onclick) {
   const b = el('button', 'row'); b.append(el('div', 'av', (title || '?')[0].toUpperCase()));
   const t = el('div'); t.append(el('b', '', title)); if (sub) t.append(el('small', '', sub));
-  b.append(t); if (dot) b.append(el('span', 'dot')); b.onclick = onclick; return b;
+  b.append(t); b.onclick = onclick; return b;
 }
-const fresh = new Set(); let namesChanged = false;
 async function ensureNames(ids) {
-  const all = [...new Set(ids)].filter(i => i && !fresh.has(i)); all.forEach(i => fresh.add(i));
-  if (!all.length) return;
-  const needWait = all.some(i => !names[i]);
-  const job = Promise.all(all.map(async i => {
-    try { const s = await getDoc(doc(db, 'users', i)); const n = s.exists() ? s.data().displayName : 'User'; if (names[i] !== n) { if (names[i]) namesChanged = true; names[i] = n; } }
-    catch { if (!names[i]) names[i] = 'User'; }
-  })).then(() => { lsSet('qv_names', names); if (namesChanged) { namesChanged = false; if (cur && lastMs.length) renderMsgs(lastMs); renderList(); } });
-  if (needWait) await job;
+  await Promise.all([...new Set(ids)].filter(i => i && !names[i]).map(async i => {
+    try { const s = await getDoc(doc(db, 'users', i)); names[i] = s.exists() ? s.data().displayName : 'User'; }
+    catch { names[i] = 'User'; }
+  }));
 }
-const secs = t => (t && t.seconds) || 0;
 
 /* ---------- auth ---------- */
 const friendly = c => ({
@@ -239,8 +134,7 @@ $('#out').onclick = () => signOut(auth);
 
 onAuthStateChanged(auth, async u => {
   if (!u) {
-    me = prof = cur = null; chats = {}; lastMs = []; replyTo = null;
-    if (unC) unC(); if (unL) unL(); unC = unL = null; show('vauth'); return;
+    me = prof = cur = null; if (unC) unC(); if (unL) unL(); unC = unL = null; show('vauth'); return;
   }
   if (me && me.uid === u.uid) return;
   me = u;
@@ -253,7 +147,6 @@ onAuthStateChanged(auth, async u => {
 
 $('#bsave').onclick = async () => {
   const username = $('#un').value.trim().toLowerCase(), displayName = $('#dn').value.trim();
-  $('#serr').textContent = '';
   if (!/^[a-z0-9_]{3,20}$/.test(username) || !displayName) { $('#serr').textContent = 'Username: 3-20 letters, numbers or _. Display name is required.'; return; }
   try {
     await runTransaction(db, async t => {
@@ -268,35 +161,102 @@ $('#bsave').onclick = async () => {
 
 /* ---------- home ---------- */
 function home() {
-  show('vhome'); renderSettings(); setTab('chats');
-  const L0 = $('#list'); L0.textContent = ''; for (let i = 0; i < 4; i++) L0.append(el('div', 'sk'));
+  show('vhome');
   if (unL) unL();
-  unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => {
-    chats = {}; snap.docs.forEach(d => { chats[d.id] = { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }; });
-    if (cur && chats[cur.id]) { cur = { ...cur, ...chats[cur.id] }; if (lastMs.length) renderMsgs(lastMs); }
-    renderList();
-  }, () => { $('#list').textContent = 'Could not load chats. Check your internet.'; });
+  unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => renderList(snap.docs),
+    () => { $('#list').textContent = 'Could not load chats. Check your internet.'; });
   const j = new URLSearchParams(location.search).get('join');
   if (j) { history.replaceState(null, '', location.pathname); joinLink(j); }
 }
-function unread(c) {
-  const lm = c.lastMessage; if (!lm || lm.senderId === me.uid) return false;
-  const lr = c.lastRead && c.lastRead[me.uid];
-  return !lr || secs(lr) < secs(lm.at);
-}
-async function renderList() {
-  const items = Object.values(chats).sort((a, b) => (secs(b.lastMessage && b.lastMessage.at) || secs(b.createdAt)) - (secs(a.lastMessage && a.lastMessage.at) || secs(a.createdAt)));
-  await ensureNames(items.flatMap(c => [c.isGroup ? null : c.members.find(m => m !== me.uid), c.lastMessage && c.lastMessage.senderId]));
+async function renderList(docs) {
+  const items = docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 9e12) - ((a.createdAt && a.createdAt.seconds) || 9e12));
+  await ensureNames(items.filter(c => !c.isGroup).map(c => c.members.find(m => m !== me.uid)));
   const L = $('#list'); L.textContent = '';
-  if (!items.length) { const p = el('p', 'empty', 'No chats yet. Search a username above, create a group, or invite friends.'); const b = el('button', '', 'Invite friends'); b.onclick = openAppInvite; p.append(el('br'), b); L.append(p); return; }
-  items.map(c => ({ c, t: c.isGroup ? c.name : (names[c.members.find(m => m !== me.uid)] || 'Chat') }))
-    .filter(x => x.t.toLowerCase().includes(chatFilter))
-    .forEach(({ c, t }) => {
-      const lm = c.lastMessage;
-      const sub = lm ? (lm.senderId === me.uid ? 'You: ' : (c.isGroup ? (names[lm.senderId] || '') + ': ' : '')) + lm.text : (c.isGroup ? 'Group, ' + c.members.length + ' members' : '');
-      L.append(row(t, sub, () => openChat(c, t), unread(c)));
-    });
+  if (!items.length) { L.append(el('p', 'empty', 'No chats yet. Search a username above or create a group.')); return; }
+  items.forEach(c => {
+    const t = c.isGroup ? c.name : (names[c.members.find(m => m !== me.uid)] || 'Chat');
+    L.append(row(t, c.isGroup ? 'Group, ' + c.members.length + ' members' : '', () => openChat(c, t)));
+  });
 }
 
 let st;
-$('#q').oninput = () => { chatFilter = $('#q').value.trim().toLowerCase(); 
+$('#q').oninput = () => { clearTimeout(st); st = setTimeout(search, 300); };
+async function search() {
+  const q = $('#q').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, ''), R = $('#res'); R.textContent = '';
+  if (q.length < 2) return;
+  try {
+    const s = await getDocs(query(collection(db, 'users'), where('username', '>=', q), where('username', '<=', q + '\uf8ff'), limit(10)));
+    let n = 0;
+    s.forEach(d => { if (d.id === me.uid) return; n++; const p = d.data(); R.append(row(p.displayName, '@' + p.username, () => startDM(d.id, p.displayName))); });
+    if (!n) R.append(el('p', 'empty', 'No user found with that username.'));
+  } catch (e) { R.append(el('p', 'empty', 'Search failed (' + e.code + ')')); }
+}
+async function startDM(other, title) {
+  const m = [me.uid, other].sort(), id = m.join('_'), ref = doc(db, 'chats', id);
+  try { const s = await getDoc(ref); if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp() }); }
+  catch (e) { return alert('Could not start chat (' + e.code + ')'); }
+  $('#q').value = ''; $('#res').textContent = '';
+  openChat({ id, isGroup: false, members: m }, title);
+}
+$('#bgrp').onclick = async () => {
+  const n = (prompt('Group name') || '').trim().slice(0, 60); if (!n) return;
+  try {
+    const r = await addDoc(collection(db, 'chats'), { isGroup: true, name: n, members: [me.uid], createdBy: me.uid, createdAt: serverTimestamp() });
+    openChat({ id: r.id, isGroup: true, name: n, members: [me.uid] }, n);
+  } catch (e) { alert('Could not create group (' + e.code + ')'); }
+};
+async function joinLink(id) {
+  try {
+    const ref = doc(db, 'chats', id), s = await getDoc(ref);
+    if (!s.exists() || !s.data().isGroup) return alert('This invite link is not valid.');
+    const c = { id, ...s.data() };
+    if (c.members.includes(me.uid)) return openChat(c, c.name);
+    if (!confirm('Join the group "' + c.name + '"?')) return;
+    await updateDoc(ref, { members: arrayUnion(me.uid) });
+    openChat(c, c.name);
+  } catch (e) { alert('Could not join (' + e.code + ')'); }
+}
+
+/* ---------- chat ---------- */
+function openChat(c, title) {
+  cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
+  if (unC) unC();
+  unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(50)), async snap => {
+    const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
+    await ensureNames(ms.map(m => m.senderId));
+    if (cur && cur.id === c.id) renderMsgs(ms);
+  }, () => { $('#msgs').textContent = ''; $('#msgs').append(el('p', 'empty', 'Could not load messages. Go back and try again.')); });
+}
+function renderMsgs(ms) {
+  const M = $('#msgs'), near = M.scrollHeight - M.scrollTop - M.clientHeight < 150; M.textContent = '';
+  ms.forEach(m => {
+    const mine = m.senderId === me.uid, d = el('div', 'msg' + (mine ? ' me' : ''));
+    if (cur.isGroup && !mine) d.append(el('b', 'who', names[m.senderId] || 'Member'));
+    const t = el('span');
+    m.text.split(/(https?:\/\/[^\s]+)/g).forEach(p => {
+      if (/^https?:\/\//.test(p)) { const a = el('a', '', p); a.href = p; a.target = '_blank'; a.rel = 'noopener noreferrer'; t.append(a); }
+      else t.append(document.createTextNode(p));
+    });
+    const when = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    d.append(t, el('i', 'time', m.pending ? 'Sending...' : when));
+    M.append(d);
+  });
+  if (near) M.scrollTop = M.scrollHeight;
+}
+$('#f').onsubmit = e => {
+  e.preventDefault();
+  const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
+  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp() })
+    .catch(() => alert('Message not sent. Check your internet and try again.'));
+};
+$('#back').onclick = () => { if (unC) { unC(); unC = null; } cur = null; show('vhome'); };
+$('#inv').onclick = () => {
+  const l = location.origin + location.pathname + '?join=' + cur.id;
+  if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
+  else prompt('Copy invite link', l);
+};
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+</body>
+  </html>
+    
