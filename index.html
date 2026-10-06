@@ -19,7 +19,7 @@
   --accent: #00a884;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
 .v { display: none; height: 100%; flex-direction: column; max-width: 600px; margin: 0 auto; background: var(--bg); position: relative; }
 .v.on { display: flex; }
 .pad { padding: 40px 24px; justify-content: center; background: var(--card); }
@@ -28,189 +28,500 @@ h1 { text-align: center; margin-bottom: 6px; font-size: 26px; }
 .mute { text-align: center; color: var(--mute); margin-bottom: 24px; font-size: 14px; }
 input, textarea { width: 100%; font: inherit; padding: 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); outline: none; }
 input:focus, textarea:focus { border-color: var(--accent); }
-button { font: inherit; cursor: pointer; border: 0; border-radius: 10px;Since you didn't specify the exact feature or platform, here is a complete, production-ready implementation of a **Custom Motivational Quote Generator** in **Flutter (Dart)**. Flutter is the industry standard for cross-platform app development (iOS & Android).
+button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding: 14px; background: var(--accent); color: #fff; font-weight: 600; width: 100%; }
+button.sec { background: transparent; color: var(--ink); border: 1px solid var(--line); margin-top: 8px; }
+.err { color: #ea0038; font-size: 13px; text-align: center; min-height: 20px; margin-bottom: 10px; }
 
-This code features a modern, modern UI with smooth gradient backgrounds, state management, and a dynamic quote refresher.
+/* Header & Navigation */
+.bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--header-bg); color: #fff; }
+.bar h2 { font-size: 18px; flex: 1; font-weight: 600; }
+.bar button { width: auto; padding: 8px 12px; font-size: 13px; background: rgba(255,255,255,0.15); color: #fff; }
+.tools { padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
+.tools input { margin: 0; padding: 10px; }
+.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; }
+.row { display: flex; width: 100%; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; position: relative; cursor: pointer; }
+.row:active { background: var(--line); }
+.row b { display: block; font-size: 16px; }
+.row small { color: var(--mute); font-size: 13px; }
+.av-box { position: relative; flex: none; }
+.av { width: 46px; height: 46px; border-radius: 50%; background: #008069; color: #fff; display: grid; place-items: center; font-weight: bold; font-size: 20px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: #25d366; position: absolute; bottom: 0; right: 0; border: 2px solid var(--card); }
 
-```dart
-import 'dart:math';
-import 'package:flutter/material.dart';
+/* Messages Area */
+#msgs { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.msg { max-width: 80%; align-self: flex-start; background: var(--other); padding: 8px 12px; border-radius: 0px 12px 12px 12px; font-size: 15px; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+.msg.me { align-self: flex-end; background: var(--mine); border-radius: 12px 0px 12px 12px; }
+.msg a { color: #53bdeb; text-decoration: underline; }
+.who { display: block; font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
+.time { display: block; text-align: right; font-size: 10px; color: var(--mute); margin-top: 4px; }
+form { display: flex; gap: 8px; padding: 10px 12px; background: var(--header-bg); }
+form input { margin: 0; border-radius: 20px; padding: 12px 16px; }
+form button { width: auto; border-radius: 50%; padding: 12px 16px; }
+.empty { color: var(--mute); text-align: center; padding: 40px 20px; font-size: 14px; }
 
-void main() {
-  runApp(const MotivationalApp());
+/* Bottom Tabs */
+.tabs { display: flex; position: absolute; bottom: 0; left: 0; right: 0; background: var(--header-bg); border-top: 1px solid var(--line); height: 55px; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mute); font-size: 11px; background: none; border: 0; border-radius: 0; padding: 0; }
+.tab.act { color: var(--accent); font-weight: bold; }
+.tab-icon { font-size: 18px; margin-bottom: 2px; }
+.call-btn { background: transparent; border: 0; color: #fff; font-size: 18px; padding: 4px 8px; border-radius: 0; width: auto; }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="vauth" class="v on pad">
+  <div class="logo">Q</div>
+  <h1>QAVLI Pro</h1>
+  <p class="mute">Connect with friends instantly</p>
+  <input id="em" type="email" placeholder="Email">
+  <input id="pw" type="password" placeholder="Password (6+ chars)">
+  <div class="err" id="aerr"></div>
+  <button id="bin">Sign In</button>
+  <button id="bup" class="sec">Create Account</button>
+</div>
+
+<!-- SETUP PROFILE -->
+<div id="vsetup" class="v pad">
+  <h1>Your Profile</h1>
+  <p class="mute">Enter your display name to continue</p>
+  <input id="pname" type="text" placeholder="Your Name or Username">
+  <div class="err" id="perr"></div>
+  <button id="bprof">Save Profile</button>
+</div>
+
+<!-- MAIN HOME PAGE (CHATS / TABS) -->
+<div id="vhome" class="v">
+  <div class="bar">
+    <h2 id="htitle">QAVLI Chats</h2>
+    <button id="bgp" style="display:none;">+ Group</button>
+  </div>
+  
+  <div class="tools" id="srchbox">
+    <input id="src" type="search" placeholder="Search users or chats...">
+  </div>
+
+  <div class="scroll" id="tabcontent"></div>
+
+  <!-- BOTTOM WHATSAPP TABS -->
+  <div class="tabs">
+    <button class="tab act" id="tchats">
+      <span class="tab-icon">💬</span>
+      <span>Chats</span>
+    </button>
+    <button class="tab" id="tgroups">
+      <span class="tab-icon">👥</span>
+      <span>Groups</span>
+    </button>
+    <button class="tab" id="tstatus">
+      <span class="tab-icon">⭕</span>
+      <span>Status</span>
+    </button>
+
+    <button class="tab" id="tprof">
+      <span class="tab-icon">⚙️</span>
+      <span>Profile</span>
+    </button>
+  </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="vchat" class="v">
+  <div class="bar">
+    <button id="bback" style="width:auto; padding:6px 12px;">←</button>
+    <h2 id="ctitle">Chat</h2>
+    <button class="call-btn" onclick="alert('Audio Call UI initialized!')">📞</button>
+    <button class="call-btn" onclick="alert('Video Call UI initialized!')">📹</button>
+  </div>
+  <div id="msgs"></div>
+  <form id="fm">
+    <input id="mi" type="text" placeholder="Type a message..." autocomplete="off">
+    <button type="submit">➤</button>
+  </form>
+</div>
+
+<!-- NEW GROUP MODAL -->
+<div id="vgp" class="v pad">
+  <h1>New Group</h1>
+  <p class="mute">Create a new group chat</p>
+  <input id="gtitle" type="text" placeholder="Group Name">
+  <div class="err" id="gerr"></div>
+  <button id="bgc">Create Group</button>
+  <button id="bgcan" class="sec">Cancel</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getAuth, 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  setPersistence,
+  browserLocalPersistence 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  addDoc, 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot, 
+  serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
+  authDomain: "qavli-37983.firebaseapp.com",
+  projectId: "qavli-37983",
+  appId: "1:168938701514:web:783d81a63d8e4423e56a33"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+setPersistence(auth, browserLocalPersistence).catch(console.error);
+
+const $ = s => document.querySelector(s);
+let me = null, prof = null, cur = null, unC = null, unL = null, names = {}, currentTab = 'chats', usersCache = [];
+
+function el(tag, cls, text) { 
+  const e = document.createElement(tag); 
+  if (cls) e.className = cls; 
+  if (text) e.textContent = text; 
+  return e; 
 }
 
-class MotivationalApp extends StatelessWidget {
-  const MotivationalApp({super.key});
+function show(id) { 
+  document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); 
+}
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Daily Motivation',
-      theme: ThemeData(
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
-      home: const QuoteScreen(),
-    );
+function fmtTime(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderText(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
+}
+
+onAuthStateChanged(auth, async u => {
+  me = u;
+  if (!u) { 
+    show('vauth'); 
+    return; 
+  }
+  const snap = await getDoc(doc(db, 'users', u.uid));
+  if (!snap.exists()) {
+    show('vsetup');
+  } else {
+    prof = snap.data();
+    await setDoc(doc(db, 'users', me.uid), { isOnline: true }, { merge: true });
+    loadHome();
+  }
+});
+
+$('#bin').onclick = async () => {
+  $('#aerr').textContent = '';
+  try { 
+    await signInWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
+  } catch(e) { 
+    $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
+  }
+};
+
+$('#bup').onclick = async () => {
+  $('#aerr').textContent = '';
+  try { 
+    await createUserWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
+  } catch(e) { 
+    $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
+  }
+};
+
+$('#bprof').onclick = async () => {
+  const n = $('#pname').value.trim();
+  if (!n) return $('#perr').textContent = 'Please enter a name';
+  prof = { name: n, email: me.email, uid: me.uid, isOnline: true };
+  await setDoc(doc(db, 'users', me.uid), prof);
+  loadHome();
+};
+
+async function loadHome() {
+  show('vhome');
+  switchTab(currentTab);
+}
+
+function setTabActive(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('act'));
+  $(id).classList.add('act');
+}
+
+$('#tchats').onclick = () => switchTab('chats');
+$('#tgroups').onclick = () => switchTab('groups');
+$('#tstatus').onclick = () => switchTab('status');
+$('#tprof').onclick = () => switchTab('prof');
+
+async function switchTab(tab) {
+  currentTab = tab;
+  if (unL) unL();
+  const box = $('#tabcontent');
+  box.innerHTML = '';
+  $('#bgp').style.display = 'none';
+  $('#srchbox').style.display = 'block';
+
+  if (tab === 'chats') {
+    setTabActive('#tchats');
+    $('#htitle').textContent = 'QAVLI Chats';
+    loadChatsTab();
+  } else if (tab === 'groups') {
+    setTabActive('#tgroups');
+    $('#htitle').textContent = 'Groups';
+    $('#bgp').style.display = 'block';
+    loadGroupsTab();
+  } else if (tab === 'status') {
+    setTabActive('#tstatus');
+    $('#htitle').textContent = 'Status';
+    $('#srchbox').style.display = 'none';
+    loadStatusTab();
+  } else if (tab === 'prof') {
+    setTabActive('#tprof');
+    $('#htitle').textContent = 'My Profile';
+    $('#srchbox').style.display = 'none';
+    loadProfileTab();
   }
 }
 
-class QuoteScreen extends StatefulWidget {
-  const QuoteScreen({super.key});
+async function loadChatsTab() {
+  const uSnap = await getDocs(collection(db, 'users'));
+  usersCache = [];
+  uSnap.forEach(d => { 
+    names[d.id] = d.data().name || 'User'; 
+    if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
+  });
 
-  @override
-  State<QuoteScreen> createState() => _QuoteScreenState();
+  unL = onSnapshot(collection(db, 'chats'), snap => {
+    renderChatsList(snap);
+  });
 }
 
-class _QuoteScreenState extends State<QuoteScreen> {
-  // List of motivational quotes
-  final List<Map<String, String>> _quotes = [
-    {
-      "quote": "The only way to do great work is to love what you do.",
-      "author": "Steve Jobs"
-    },
-    {
-      "quote": "Believe you can and you're halfway there.",
-      "author": "Theodore Roosevelt"
-    },
-    {
-      "quote": "Action is the foundational key to all success.",
-      "author": "Pablo Picasso"
-    },
-    {
-      "quote": "Your limitation—it's only your imagination.",
-      "author": "Anonymous"
-    },
-    {
-      "quote": "Push yourself, because no one else is going to do it for you.",
-      "author": "Anonymous"
-    },
-  ];
-
-  // List of modern gradient backgrounds
-  final List<List<Color>> _gradients = [
-    [const Color(0xFF8A2387), const Color(0xFFE94057), const Color(0xFFF27121)],
-    [const Color(0xFF00B4DB), const Color(0xFF0083B0)],
-    [const Color(0xFF11998E), const Color(0xFF38EF7D)],
-    [const Color(0xFF0F2027), const Color(0xFF203A43), const Color(0xFF2C5364)],
-  ];
-
-  int _currentIndex = 0;
-  int _currentGradientIndex = 0;
-
-  void _nextQuote() {
-    setState(() {
-      _currentIndex = Random().nextInt(_quotes.length);
-      _currentGradientIndex = Random().nextInt(_gradients.length);
+function renderChatsList(snap) {
+  const box = $('#tabcontent');
+  box.innerHTML = '';
+  let list = [];
+  if (snap) {
+    snap.forEach(d => {
+      const c = { id: d.id, ...d.data() };
+      if (c.type === 'direct' && c.members && c.members.includes(me.uid)) {
+        list.push(c);
+      }
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final currentQuote = _quotes[_currentIndex];
+  const queryStr = $('#src').value.toLowerCase().trim();
+  if (queryStr) {
+    const matchedUsers = usersCache.filter(u => (u.name || '').toLowerCase().includes(queryStr));
+    if (matchedUsers.length) {
+      matchedUsers.forEach(u => {
+        const row = el('button', 'row');
+        const avBox = el('div', 'av-box');
+        avBox.appendChild(el('div', 'av', (u.name || 'U')[0].toUpperCase()));
+        if (u.isOnline) avBox.appendChild(el('div', 'dot'));
+        
+        const meta = el('div');
+        meta.appendChild(el('b', '', u.name || 'User'));
+        meta.appendChild(el('small', '', 'Tap to start direct chat'));
+        row.appendChild(avBox);
+        row.appendChild(meta);
+        row.onclick = () => startDirectChat(u.id, u.name);
+        box.appendChild(row);
+      });
+      return;
+    }
+  }
 
-    return Scaffold(
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 600),
-        curve: Curves.easeInOut,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: _gradients[_currentGradientIndex],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Top Bar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'MOTIVATION',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.0,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.share, color: Colors.white70),
-                      onPressed: () {
-                        // Add share functionality here
-                      },
-                    ),
-                  ],
-                ),
+  if (!list.length) {
+    box.appendChild(el('div', 'empty', 'No direct chats yet. Use search to find users!'));
+    return;
+  }
 
-                // Quote Card Area
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.format_quote_rounded,
-                      size: 60,
-                      color: Colors.white38,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '"${currentQuote['quote']}"',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        height: 1.3,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "- ${currentQuote['author']}",
-                      style: const TextStyle(
-                        color: Colors.white80,
-                        fontSize: 16,
-                        fontStyle: FontStyle.italic,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                  ],
-                ),
+  list.forEach(c => {
+    const otherId = c.members.find(m => m !== me.uid);
+    const title = names[otherId] || 'Direct Chat';
+    const row = el('button', 'row');
+    const avBox = el('div', 'av-box');
+    avBox.appendChild(el('div', 'av', title[0].toUpperCase()));
+    
+    const meta = el('div');
+    meta.appendChild(el('b', '', title));
+    meta.appendChild(el('small', '', c.lastMsg || 'Tap to open chat'));
+    row.appendChild(avBox);
+    row.appendChild(meta);
+    row.onclick = () => openChat(c.id, title);
+    box.appendChild(row);
+  });
+}
 
-                // Action Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _nextQuote,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black80,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      'Inspire Me',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+$('#src').oninput = () => {
+  if (currentTab === 'chats') renderChatsList(null);
+};
+
+async function startDirectChat(otherUid, otherName) {
+  const q = query(collection(db, 'chats'), where('type', '==', 'direct'), where('members', 'array-contains', me.uid));
+  const snap = await getDocs(q);
+  let existingId = null;
+  snap.forEach(d => {
+    if (d.data().members.includes(otherUid)) existingId = d.id;
+  });
+
+  if (existingId) {
+    openChat(existingId, otherName);
+  } else {
+    const ref = await addDoc(collection(db, 'chats'), {
+      type: 'direct',
+      members: [me.uid, otherUid],
+      updatedAt: serverTimestamp()
+    });
+    openChat(ref.id, otherName);
   }
 }
+
+function loadGroupsTab() {
+  unL = onSnapshot(collection(db, 'chats'), snap => {
+    const box = $('#tabcontent');
+    box.innerHTML = '';
+    let list = [];
+    snap.forEach(d => {
+      const c = { id: d.id, ...d.data() };
+      if (c.type === 'group') list.push(c);
+    });
+
+    if (!list.length) {
+      box.appendChild(el('div', 'empty', 'No groups found. Tap "+ Group" to create one.'));
+      return;
+    }
+
+    list.forEach(c => {
+      const row = el('button', 'row');
+      const avBox = el('div', 'av-box');
+      avBox.appendChild(el('div', 'av', (c.title || 'G')[0].toUpperCase()));
+      const meta = el('div');
+      meta.appendChild(el('b', '', c.title || 'Group'));
+      meta.appendChild(el('small', '', c.lastMsg || 'Group conversation'));
+      row.appendChild(avBox);
+      row.appendChild(meta);
+      row.onclick = () => openChat(c.id, c.title);
+      box.appendChild(row);
+    });
+  });
+}
+
+function loadStatusTab() {
+  const box = $('#tabcontent');
+  box.innerHTML = `
+    <div style="padding:16px;">
+      <div class="row" style="border:none; padding:0; margin-bottom:20px;">
+        <div class="av-box"><div class="av">+</div></div>
+        <div><b>My Status</b><small>Tap to add status update</small></div>
+      </div>
+      <p class="mute" style="text-align:left;">Recent updates</p>
+      <div class="empty">No recent status updates from your contacts.</div>
+    </div>
+  `;
+}
+
+function loadProfileTab() {
+  const box = $('#tabcontent');
+  box.innerHTML = `
+    <div style="padding:24px; text-align:center;">
+      <div class="av" style="width:80px; height:80px; font-size:36px; margin:0 auto 16px;">${(prof.name || 'U')[0].toUpperCase()}</div>
+      <h2>${prof.name || 'User'}</h2>
+      <p class="mute">${me.email}</p>
+      <button id="btnlogout" style="margin-top:30px; background:#ea0038;">Logout</button>
+    </div>
+  `;
+  $('#btnlogout').onclick = async () => {
+    await setDoc(doc(db, 'users', me.uid), { isOnline: false }, { merge: true });
+    signOut(auth);
+  };
+}
+
+function openChat(cid, title) {
+  cur = cid;
+  $('#ctitle').textContent = title;
+  show('vchat');
+  
+  if (unC) unC();
+  const q = query(collection(db, 'chats', cid, 'messages'), orderBy('time', 'asc'));
+  
+  unC = onSnapshot(q, snap => {
+    const box = $('#msgs');
+    box.innerHTML = '';
+    snap.forEach(d => {
+      const m = d.data();
+      const isMe = m.sender === me.uid;
+      const div = el('div', `msg ${isMe ? 'me' : ''}`);
+      
+      if (!isMe) div.appendChild(el('span', 'who', names[m.sender] || 'User'));
+      
+      const txt = el('span');
+      txt.innerHTML = renderText(m.text || '');
+      div.appendChild(txt);
+      
+      div.appendChild(el('span', 'time', fmtTime(m.time)));
+      box.appendChild(div);
+    });
+    box.scrollTop = box.scrollHeight;
+  });
+}
+
+$('#fm').onsubmit = async e => {
+  e.preventDefault();
+  const input = $('#mi');
+  const text = input.value.trim();
+  if (!text || !cur) return;
+  input.value = '';
+  
+  await addDoc(collection(db, 'chats', cur, 'messages'), {
+    text,
+    sender: me.uid,
+    time: serverTimestamp()
+  });
+  
+  await setDoc(doc(db, 'chats', cur), {
+    lastMsg: text,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+};
+
+$('#bback').onclick = () => loadHome();
+
+$('#bgp').onclick = () => show('vgp');
+$('#bgcan').onclick = () => loadHome();
+
+$('#bgc').onclick = async () => {
+  const t = $('#gtitle').value.trim();
+  if (!t) return $('#gerr').textContent = 'Enter group name';
+  
+  const ref = await addDoc(collection(db, 'chats'), {
+    title: t,
+    type: 'group',
+    created: serverTimestamp(),
+    members: [me.uid]
+  });
+  
+  $('#gtitle').value = '';
+  openChat(ref.id, t);
+};
+</script>
+</body>
+  </html>
