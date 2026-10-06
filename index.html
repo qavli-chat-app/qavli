@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#075e54">
-<title>QAVLI Pro</title>
+<title>QAVLI Pro Ultra</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root {
@@ -20,6 +20,19 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+
+/* TOP LOADING BAR (PATTI) */
+#loader-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: var(--accent);
+  z-index: 9999;
+  transition: width 0.3s ease;
+}
+
 .v { display: none; height: 100%; flex-direction: column; max-width: 600px; margin: 0 auto; background: var(--bg); position: relative; }
 .v.on { display: flex; }
 .pad { padding: 40px 24px; justify-content: center; background: var(--card); }
@@ -32,14 +45,14 @@ button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding
 button.sec { background: transparent; color: var(--ink); border: 1px solid var(--line); margin-top: 8px; }
 .err { color: #ea0038; font-size: 13px; text-align: center; min-height: 20px; margin-bottom: 10px; }
 
-/* Header & Fast Layout */
-.bar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--header-bg); color: #fff; }
-.bar h2 { font-size: 18px; flex: 1; font-weight: 600; }
+/* Header & Tabs */
+.bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--header-bg); color: #fff; }
+.bar h2 { font-size: 18px; flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bar button { width: auto; padding: 8px 12px; font-size: 13px; background: rgba(255,255,255,0.15); color: #fff; }
 .tools { padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
 .tools input { margin: 0; padding: 10px; }
-.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; will-change: transform; }
-.row { display: flex; width: 100%; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; position: relative; cursor: pointer; }
+.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; }
+.row { display: flex; width: 100%; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; }
 .row:active { background: var(--line); }
 .row b { display: block; font-size: 16px; }
 .row small { color: var(--mute); font-size: 13px; }
@@ -47,9 +60,9 @@ button.sec { background: transparent; color: var(--ink); border: 1px solid var(-
 .av { width: 46px; height: 46px; border-radius: 50%; background: #008069; color: #fff; display: grid; place-items: center; font-weight: bold; font-size: 20px; }
 .dot { width: 12px; height: 12px; border-radius: 50%; background: #25d366; position: absolute; bottom: 0; right: 0; border: 2px solid var(--card); }
 
-/* Messages Area */
+/* Chat Space */
 #msgs { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
-.msg { max-width: 80%; align-self: flex-start; background: var(--other); padding: 8px 12px; border-radius: 0px 12px 12px 12px; font-size: 15px; word-break: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+.msg { max-width: 80%; align-self: flex-start; background: var(--other); padding: 8px 12px; border-radius: 0px 12px 12px 12px; font-size: 15px; word-break: break-word; }
 .msg.me { align-self: flex-end; background: var(--mine); border-radius: 12px 0px 12px 12px; }
 .msg a { color: #53bdeb; text-decoration: underline; }
 .who { display: block; font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
@@ -59,21 +72,24 @@ form input { margin: 0; border-radius: 20px; padding: 12px 16px; }
 form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 .empty { color: var(--mute); text-align: center; padding: 40px 20px; font-size: 14px; }
 
-/* Bottom WhatsApp Navigation Tabs */
+/* Tabs */
 .tabs { display: flex; position: absolute; bottom: 0; left: 0; right: 0; background: var(--header-bg); border-top: 1px solid var(--line); height: 55px; }
-.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mute); font-size: 11px; background: none; border: 0; border-radius: 0; padding: 0; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mute); font-size: 11px; background: none; border: 0; padding: 0; }
 .tab.act { color: var(--accent); font-weight: bold; }
 .tab-icon { font-size: 18px; margin-bottom: 2px; }
-.call-btn { background: transparent; border: 0; color: #fff; font-size: 18px; padding: 4px 8px; border-radius: 0; width: auto; }
+.icon-btn { background: transparent; border: 0; color: #fff; font-size: 18px; padding: 4px; width: auto; cursor: pointer; }
 </style>
 </head>
 <body>
+
+<!-- TOP LOADING PATTI -->
+<div id="loader-bar"></div>
 
 <!-- AUTH SCREEN -->
 <div id="vauth" class="v on pad">
   <div class="logo">Q</div>
   <h1>QAVLI Pro</h1>
-  <p class="mute">Fast & Secure Chat</p>
+  <p class="mute">Ultra Fast WhatsApp Experience</p>
   <input id="em" type="email" placeholder="Email">
   <input id="pw" type="password" placeholder="Password (6+ chars)">
   <div class="err" id="aerr"></div>
@@ -84,8 +100,8 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 <!-- SETUP PROFILE -->
 <div id="vsetup" class="v pad">
   <h1>Your Profile</h1>
-  <p class="mute">Enter display name</p>
-  <input id="pname" type="text" placeholder="Your Name or Username">
+  <p class="mute">Set your Unique Username for discovery</p>
+  <input id="pname" type="text" placeholder="Username (e.g. john_doe)">
   <div class="err" id="perr"></div>
   <button id="bprof">Save Profile</button>
 </div>
@@ -98,7 +114,7 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
   </div>
   
   <div class="tools" id="srchbox">
-    <input id="src" type="search" placeholder="Search users or chats...">
+    <input id="src" type="search" placeholder="Search by Username or Name...">
   </div>
 
   <div class="scroll" id="tabcontent"></div>
@@ -129,8 +145,9 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
   <div class="bar">
     <button id="bback" style="width:auto; padding:6px 12px;">←</button>
     <h2 id="ctitle">Chat</h2>
-    <button class="call-btn" onclick="alert('Voice Call feature ready')">📞</button>
-    <button class="call-btn" onclick="alert('Video Call feature ready')">📹</button>
+    <button class="icon-btn" id="binvite" title="Share Group Invite Link" style="display:none;">🔗</button>
+    <button class="icon-btn" onclick="alert('Audio Call UI Ready')">📞</button>
+    <button class="icon-btn" onclick="alert('Video Call UI Ready')">📹</button>
   </div>
   <div id="msgs"></div>
   <form id="fm">
@@ -142,7 +159,7 @@ form button { width: auto; border-radius: 50%; padding: 12px 16px; }
 <!-- NEW GROUP MODAL -->
 <div id="vgp" class="v pad">
   <h1>New Group</h1>
-  <p class="mute">Create group chat</p>
+  <p class="mute">Create a new group space</p>
   <input id="gtitle" type="text" placeholder="Group Name">
   <div class="err" id="gerr"></div>
   <button id="bgc">Create Group</button>
@@ -189,7 +206,20 @@ const db = getFirestore(app);
 setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 const $ = s => document.querySelector(s);
-let me = null, prof = null, cur = null, unC = null, unL = null, names = {}, currentTab = 'chats', usersCache = [];
+let me = null, prof = null, cur = null, curChatData = null, unC = null, unL = null, names = {}, currentTab = 'chats', usersCache = [];
+
+/* TOP PATTI LOADER CONTROL */
+function startLoading() {
+  const bar = $('#loader-bar');
+  bar.style.width = '30%';
+  setTimeout(() => bar.style.width = '70%', 200);
+}
+
+function stopLoading() {
+  const bar = $('#loader-bar');
+  bar.style.width = '100%';
+  setTimeout(() => { bar.style.width = '0%'; }, 400);
+}
 
 function el(tag, cls, text) { 
   const e = document.createElement(tag); 
@@ -214,9 +244,11 @@ function renderText(text) {
 }
 
 onAuthStateChanged(auth, async u => {
+  startLoading();
   me = u;
   if (!u) { 
-    show('vauth'); 
+    show('vauth');
+    stopLoading(); 
     return; 
   }
   const snap = await getDoc(doc(db, 'users', u.uid));
@@ -227,32 +259,39 @@ onAuthStateChanged(auth, async u => {
     setDoc(doc(db, 'users', me.uid), { isOnline: true }, { merge: true }).catch(() => {});
     loadHome();
   }
+  stopLoading();
 });
 
 $('#bin').onclick = async () => {
+  startLoading();
   $('#aerr').textContent = '';
   try { 
     await signInWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
   } catch(e) { 
     $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
   }
+  stopLoading();
 };
 
 $('#bup').onclick = async () => {
+  startLoading();
   $('#aerr').textContent = '';
   try { 
     await createUserWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
   } catch(e) { 
     $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
   }
+  stopLoading();
 };
 
 $('#bprof').onclick = async () => {
+  startLoading();
   const n = $('#pname').value.trim();
-  if (!n) return $('#perr').textContent = 'Please enter a name';
+  if (!n) { stopLoading(); return $('#perr').textContent = 'Enter username'; }
   prof = { name: n, email: me.email, uid: me.uid, isOnline: true };
   await setDoc(doc(db, 'users', me.uid), prof);
   loadHome();
+  stopLoading();
 };
 
 async function loadHome() {
@@ -271,6 +310,7 @@ $('#tstatus').onclick = () => switchTab('status');
 $('#tprof').onclick = () => switchTab('prof');
 
 async function switchTab(tab) {
+  startLoading();
   currentTab = tab;
   if (unL) unL();
   const box = $('#tabcontent');
@@ -281,6 +321,7 @@ async function switchTab(tab) {
   if (tab === 'chats') {
     setTabActive('#tchats');
     $('#htitle').textContent = 'QAVLI Chats';
+    await fetchAllUsers();
     loadChatsTab();
   } else if (tab === 'groups') {
     setTabActive('#tgroups');
@@ -298,17 +339,19 @@ async function switchTab(tab) {
     $('#srchbox').style.display = 'none';
     loadProfileTab();
   }
+  stopLoading();
 }
 
-async function loadChatsTab() {
-  getDocs(collection(db, 'users')).then(uSnap => {
-    usersCache = [];
-    uSnap.forEach(d => { 
-      names[d.id] = d.data().name || 'User'; 
-      if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
-    });
+async function fetchAllUsers() {
+  const uSnap = await getDocs(collection(db, 'users'));
+  usersCache = [];
+  uSnap.forEach(d => { 
+    names[d.id] = d.data().name || 'User'; 
+    if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
   });
+}
 
+function loadChatsTab() {
   unL = onSnapshot(collection(db, 'chats'), snap => {
     renderChatsList(snap);
   });
@@ -339,7 +382,7 @@ function renderChatsList(snap) {
         
         const meta = el('div');
         meta.appendChild(el('b', '', u.name || 'User'));
-        meta.appendChild(el('small', '', 'Tap to start direct chat'));
+        meta.appendChild(el('small', '', '@' + (u.name || 'user') + ' • Tap to Chat'));
         row.appendChild(avBox);
         row.appendChild(meta);
         row.onclick = () => startDirectChat(u.id, u.name);
@@ -350,7 +393,7 @@ function renderChatsList(snap) {
   }
 
   if (!list.length) {
-    box.appendChild(el('div', 'empty', 'No direct chats yet. Use search to find users!'));
+    box.appendChild(el('div', 'empty', 'No chats found. Search username above!'));
     return;
   }
 
@@ -366,7 +409,7 @@ function renderChatsList(snap) {
     meta.appendChild(el('small', '', c.lastMsg || 'Tap to open chat'));
     row.appendChild(avBox);
     row.appendChild(meta);
-    row.onclick = () => openChat(c.id, title);
+    row.onclick = () => openChat(c.id, title, c);
     box.appendChild(row);
   });
 }
@@ -376,23 +419,28 @@ $('#src').oninput = () => {
 };
 
 async function startDirectChat(otherUid, otherName) {
+  startLoading();
   const q = query(collection(db, 'chats'), where('type', '==', 'direct'), where('members', 'array-contains', me.uid));
   const snap = await getDocs(q);
-  let existingId = null;
+  let existingId = null, chatData = null;
   snap.forEach(d => {
-    if (d.data().members.includes(otherUid)) existingId = d.id;
+    if (d.data().members.includes(otherUid)) {
+      existingId = d.id;
+      chatData = d.data();
+    }
   });
 
   if (existingId) {
-    openChat(existingId, otherName);
+    openChat(existingId, otherName, chatData);
   } else {
     const ref = await addDoc(collection(db, 'chats'), {
       type: 'direct',
       members: [me.uid, otherUid],
       updatedAt: serverTimestamp()
     });
-    openChat(ref.id, otherName);
+    openChat(ref.id, otherName, { type: 'direct' });
   }
+  stopLoading();
 }
 
 function loadGroupsTab() {
@@ -406,7 +454,7 @@ function loadGroupsTab() {
     });
 
     if (!list.length) {
-      box.appendChild(el('div', 'empty', 'No groups found. Tap "+ Group" to create one.'));
+      box.appendChild(el('div', 'empty', 'No groups yet. Tap "+ Group" to create.'));
       return;
     }
 
@@ -416,10 +464,10 @@ function loadGroupsTab() {
       avBox.appendChild(el('div', 'av', (c.title || 'G')[0].toUpperCase()));
       const meta = el('div');
       meta.appendChild(el('b', '', c.title || 'Group'));
-      meta.appendChild(el('small', '', c.lastMsg || 'Group conversation'));
+      meta.appendChild(el('small', '', c.lastMsg || 'Tap to join group chat'));
       row.appendChild(avBox);
       row.appendChild(meta);
-      row.onclick = () => openChat(c.id, c.title);
+      row.onclick = () => openChat(c.id, c.title, c);
       box.appendChild(row);
     });
   });
@@ -431,10 +479,10 @@ function loadStatusTab() {
     <div style="padding:16px;">
       <div class="row" style="border:none; padding:0; margin-bottom:20px;">
         <div class="av-box"><div class="av">+</div></div>
-        <div><b>My Status</b><small>Tap to add status update</small></div>
+        <div><b>My Status</b><small>Tap to post 24h status</small></div>
       </div>
-      <p class="mute" style="text-align:left;">Recent updates</p>
-      <div class="empty">No recent status updates from contacts.</div>
+      <p class="mute" style="text-align:left;">Recent Updates</p>
+      <div class="empty">No status updates available.</div>
     </div>
   `;
 }
@@ -444,20 +492,31 @@ function loadProfileTab() {
   box.innerHTML = `
     <div style="padding:24px; text-align:center;">
       <div class="av" style="width:80px; height:80px; font-size:36px; margin:0 auto 16px;">${(prof.name || 'U')[0].toUpperCase()}</div>
-      <h2>${prof.name || 'User'}</h2>
+      <h2>@${prof.name || 'User'}</h2>
       <p class="mute">${me.email}</p>
       <button id="btnlogout" style="margin-top:30px; background:#ea0038;">Logout</button>
     </div>
   `;
   $('#btnlogout').onclick = async () => {
+    startLoading();
     await setDoc(doc(db, 'users', me.uid), { isOnline: false }, { merge: true });
     signOut(auth);
+    stopLoading();
   };
 }
 
-function openChat(cid, title) {
+function openChat(cid, title, data) {
+  startLoading();
   cur = cid;
+  curChatData = data;
   $('#ctitle').textContent = title;
+  
+  if (data && data.type === 'group') {
+    $('#binvite').style.display = 'inline-block';
+  } else {
+    $('#binvite').style.display = 'none';
+  }
+  
   show('vchat');
   
   if (unC) unC();
@@ -481,8 +540,20 @@ function openChat(cid, title) {
       box.appendChild(div);
     });
     box.scrollTop = box.scrollHeight;
+    stopLoading();
   });
 }
+
+/* GROUP INVITE SHARE SYSTEM */
+$('#binvite').onclick = () => {
+  const inviteUrl = `${window.location.origin}${window.location.pathname}?group=${cur}`;
+  if (navigator.share) {
+    navigator.share({ title: 'Join QAVLI Group', url: inviteUrl });
+  } else {
+    navigator.clipboard.writeText(inviteUrl);
+    alert('Group Invite Link Copied to Clipboard!');
+  }
+};
 
 $('#fm').onsubmit = async e => {
   e.preventDefault();
@@ -504,13 +575,13 @@ $('#fm').onsubmit = async e => {
 };
 
 $('#bback').onclick = () => loadHome();
-
 $('#bgp').onclick = () => show('vgp');
 $('#bgcan').onclick = () => loadHome();
 
 $('#bgc').onclick = async () => {
+  startLoading();
   const t = $('#gtitle').value.trim();
-  if (!t) return $('#gerr').textContent = 'Enter group name';
+  if (!t) { stopLoading(); return $('#gerr').textContent = 'Enter group name'; }
   
   const ref = await addDoc(collection(db, 'chats'), {
     title: t,
@@ -520,8 +591,9 @@ $('#bgc').onclick = async () => {
   });
   
   $('#gtitle').value = '';
-  openChat(ref.id, t);
+  openChat(ref.id, t, { type: 'group' });
+  stopLoading();
 };
 </script>
 </body>
-    </html>
+  </html>
