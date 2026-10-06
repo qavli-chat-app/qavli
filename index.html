@@ -3,194 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#075e54">
-<title>QAVLI Pro Ultra</title>
+<meta name="theme-color" content="#14213d">
+<title>QAVLI</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root {
-  --bg: #0b141a;
-  --card: #111b21;
-  --ink: #e9edef;
-  --mute: #8696a0;
-  --line: #222d34;
-  --header-bg: #202c33;
-  --mine: #005c4b;
-  --other: #202c33;
-  --accent: #00a884;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
-
-/* TOP LOADING BAR (PATTI) */
-#loader-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 0%;
-  height: 3px;
-  background: var(--accent);
-  z-index: 9999;
-  transition: width 0.3s ease;
-}
-
-.v { display: none; height: 100%; flex-direction: column; max-width: 600px; margin: 0 auto; background: var(--bg); position: relative; }
-.v.on { display: flex; }
-.pad { padding: 40px 24px; justify-content: center; background: var(--card); }
-.logo { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); color: #fff; font: bold 36px/70px sans-serif; text-align: center; margin: 0 auto 16px; }
-h1 { text-align: center; margin-bottom: 6px; font-size: 26px; }
-.mute { text-align: center; color: var(--mute); margin-bottom: 24px; font-size: 14px; }
-input, textarea { width: 100%; font: inherit; padding: 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); outline: none; }
-input:focus, textarea:focus { border-color: var(--accent); }
-button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding: 14px; background: var(--accent); color: #fff; font-weight: 600; width: 100%; }
-button.sec { background: transparent; color: var(--ink); border: 1px solid var(--line); margin-top: 8px; }
-.err { color: #ea0038; font-size: 13px; text-align: center; min-height: 20px; margin-bottom: 10px; }
-
-/* Header & Tabs */
-.bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--header-bg); color: #fff; }
-.bar h2 { font-size: 18px; flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar button { width: auto; padding: 8px 12px; font-size: 13px; background: rgba(255,255,255,0.15); color: #fff; }
-.tools { padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
-.tools input { margin: 0; padding: 10px; }
-.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; }
-.row { display: flex; width: 100%; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; }
-.row:active { background: var(--line); }
-.row b { display: block; font-size: 16px; }
-.row small { color: var(--mute); font-size: 13px; }
-.av-box { position: relative; flex: none; }
-.av { width: 46px; height: 46px; border-radius: 50%; background: #008069; color: #fff; display: grid; place-items: center; font-weight: bold; font-size: 20px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: #25d366; position: absolute; bottom: 0; right: 0; border: 2px solid var(--card); }
-
-/* Chat Space */
-#msgs { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
-.msg { max-width: 80%; align-self: flex-start; background: var(--other); padding: 8px 12px; border-radius: 0px 12px 12px 12px; font-size: 15px; word-break: break-word; }
-.msg.me { align-self: flex-end; background: var(--mine); border-radius: 12px 0px 12px 12px; }
-.msg a { color: #53bdeb; text-decoration: underline; }
-.who { display: block; font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
-.time { display: block; text-align: right; font-size: 10px; color: var(--mute); margin-top: 4px; }
-form { display: flex; gap: 8px; padding: 10px 12px; background: var(--header-bg); }
-form input { margin: 0; border-radius: 20px; padding: 12px 16px; }
-form button { width: auto; border-radius: 50%; padding: 12px 16px; }
-.empty { color: var(--mute); text-align: center; padding: 40px 20px; font-size: 14px; }
-
-/* Tabs */
-.tabs { display: flex; position: absolute; bottom: 0; left: 0; right: 0; background: var(--header-bg); border-top: 1px solid var(--line); height: 55px; }
-.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mute); font-size: 11px; background: none; border: 0; padding: 0; }
-.tab.act { color: var(--accent); font-weight: bold; }
-.tab-icon { font-size: 18px; margin-bottom: 2px; }
-.icon-btn { background: transparent; border: 0; color: #fff; font-size: 18px; padding: 4px; width: auto; cursor: pointer; }
+:root{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#667089;--line:#dfe4ef;--brand:#14213d;--accent:#fca311;--mine:#fde3b0;--other:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1426;--card:#141f38;--ink:#edf1fa;--mute:#93a0bd;--line:#26334f;--brand:#0c1426;--mine:#6b4a0c;--other:#1b2845}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.v{display:none;height:100%;flex-direction:column;max-width:640px;margin:0 auto;background:var(--bg)}
+.v.on{display:flex}
+.pad{padding:calc(32px + env(safe-area-inset-top)) 24px 24px;justify-content:center}
+.logo{width:64px;height:64px;border-radius:50% 50% 50% 14px;background:var(--accent);color:var(--brand);font:800 38px/64px Georgia,serif;text-align:center;margin-bottom:12px}
+h1{margin:0 0 4px;font:700 28px Georgia,serif;letter-spacing:.5px}
+.mute{color:var(--mute);margin:0 0 20px}
+input{width:100%;font:inherit;padding:13px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:13px 16px;background:var(--accent);color:#14213d;font-weight:600}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.err{color:#d62839;min-height:22px;margin:6px 0}
+.bar{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--brand);color:#fff}
+.bar h2{margin:0;font-size:18px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar button{background:rgba(255,255,255,.14);color:#fff;padding:8px 12px}
+.tools{padding:12px 14px 4px}
+.tools input{margin:0}
+.scroll{flex:1;overflow-y:auto;padding:6px 8px}
+.row{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);font-weight:400;padding:11px 10px;border-radius:12px}
+.row:hover{background:var(--card)}
+.row b{display:block}
+.row small{color:var(--mute)}
+.av{width:44px;height:44px;border-radius:50%;background:var(--brand);color:var(--accent);display:grid;place-items:center;font:700 18px Georgia,serif;flex:none;border:2px solid var(--accent)}
+.empty{color:var(--mute);text-align:center;padding:30px 20px}
+#msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:80%;align-self:flex-start;background:var(--other);padding:8px 12px;border-radius:16px 16px 16px 4px;overflow-wrap:anywhere;border:1px solid var(--line)}
+.msg.me{align-self:flex-end;background:var(--mine);border-radius:16px 16px 4px 16px}
+.msg a{color:inherit;text-decoration:underline}
+.who{display:block;font-size:13px;color:var(--mute)}
+.time{display:block;text-align:right;font-size:11px;color:var(--mute);font-style:normal}
+form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+form input{margin:0}
 </style>
 </head>
 <body>
 
-<!-- TOP LOADING PATTI -->
-<div id="loader-bar"></div>
-
-<!-- AUTH SCREEN -->
 <div id="vauth" class="v on pad">
   <div class="logo">Q</div>
-  <h1>QAVLI Pro</h1>
-  <p class="mute">Ultra Fast WhatsApp Experience</p>
-  <input id="em" type="email" placeholder="Email">
-  <input id="pw" type="password" placeholder="Password (6+ chars)">
-  <div class="err" id="aerr"></div>
-  <button id="bin">Sign In</button>
-  <button id="bup" class="sec">Create Account</button>
+  <h1>QAVLI</h1>
+  <p class="mute">Sign in to start chatting.</p>
+  <input id="em" type="email" placeholder="Email" autocomplete="email">
+  <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
+  <div class="err" id="aerr" role="alert"></div>
+  <button id="bin">Sign in</button>
+  <p></p>
+  <button id="bup" class="sec">Create account</button>
 </div>
 
-<!-- SETUP PROFILE -->
 <div id="vsetup" class="v pad">
-  <h1>Your Profile</h1>
-  <p class="mute">Set your Unique Username for discovery</p>
-  <input id="pname" type="text" placeholder="Username (e.g. john_doe)">
-  <div class="err" id="perr"></div>
-  <button id="bprof">Save Profile</button>
+  <div class="logo">Q</div>
+  <h1>Your profile</h1>
+  <p class="mute">Friends find you by username.</p>
+  <input id="un" placeholder="Username (a-z, 0-9, _)" maxlength="20" autocapitalize="none">
+  <input id="dn" placeholder="Display name" maxlength="40">
+  <div class="err" id="serr" role="alert"></div>
+  <button id="bsave">Save profile</button>
 </div>
 
-<!-- MAIN HOME -->
 <div id="vhome" class="v">
-  <div class="bar">
-    <h2 id="htitle">QAVLI Chats</h2>
-    <button id="bgp" style="display:none;">+ Group</button>
-  </div>
-  
-  <div class="tools" id="srchbox">
-    <input id="src" type="search" placeholder="Search by Username or Name...">
-  </div>
-
-  <div class="scroll" id="tabcontent"></div>
-
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab act" id="tchats">
-      <span class="tab-icon">💬</span>
-      <span>Chats</span>
-    </button>
-    <button class="tab" id="tgroups">
-      <span class="tab-icon">👥</span>
-      <span>Groups</span>
-    </button>
-    <button class="tab" id="tstatus">
-      <span class="tab-icon">⭕</span>
-      <span>Status</span>
-    </button>
-    <button class="tab" id="tprof">
-      <span class="tab-icon">⚙️</span>
-      <span>Profile</span>
-    </button>
-  </div>
+  <div class="bar"><h2>QAVLI</h2><button id="bgrp">New group</button><button id="out">Sign out</button></div>
+  <div class="tools"><input id="q" placeholder="Find a person by username" autocapitalize="none"></div>
+  <div class="scroll"><div id="res"></div><div id="list"></div></div>
 </div>
 
-<!-- CHAT SCREEN -->
 <div id="vchat" class="v">
-  <div class="bar">
-    <button id="bback" style="width:auto; padding:6px 12px;">←</button>
-    <h2 id="ctitle">Chat</h2>
-    <button class="icon-btn" id="binvite" title="Share Group Invite Link" style="display:none;">🔗</button>
-    <button class="icon-btn" onclick="alert('Audio Call UI Ready')">📞</button>
-    <button class="icon-btn" onclick="alert('Video Call UI Ready')">📹</button>
-  </div>
+  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="inv" hidden>Invite link</button></div>
   <div id="msgs"></div>
-  <form id="fm">
-    <input id="mi" type="text" placeholder="Type a message..." autocomplete="off">
-    <button type="submit">➤</button>
-  </form>
-</div>
-
-<!-- NEW GROUP MODAL -->
-<div id="vgp" class="v pad">
-  <h1>New Group</h1>
-  <p class="mute">Create a new group space</p>
-  <input id="gtitle" type="text" placeholder="Group Name">
-  <div class="err" id="gerr"></div>
-  <button id="bgc">Create Group</button>
-  <button id="bgcan" class="sec">Cancel</button>
+  <form id="f"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  setPersistence,
-  browserLocalPersistence 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  addDoc, 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
-  serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
@@ -198,402 +94,169 @@ const firebaseConfig = {
   projectId: "qavli-37983",
   appId: "1:168938701514:web:783d81a63d8e4423e56a33"
 };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-setPersistence(auth, browserLocalPersistence).catch(console.error);
-
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 const $ = s => document.querySelector(s);
-let me = null, prof = null, cur = null, curChatData = null, unC = null, unL = null, names = {}, currentTab = 'chats', usersCache = [];
+let me = null, prof = null, cur = null, unC = null, unL = null, names = {};
 
-/* TOP PATTI LOADER CONTROL */
-function startLoading() {
-  const bar = $('#loader-bar');
-  bar.style.width = '30%';
-  setTimeout(() => bar.style.width = '70%', 200);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
+function row(title, sub, onclick) {
+  const b = el('button', 'row'); b.append(el('div', 'av', (title || '?')[0].toUpperCase()));
+  const t = el('div'); t.append(el('b', '', title)); if (sub) t.append(el('small', '', sub));
+  b.append(t); b.onclick = onclick; return b;
+}
+async function ensureNames(ids) {
+  await Promise.all([...new Set(ids)].filter(i => i && !names[i]).map(async i => {
+    try { const s = await getDoc(doc(db, 'users', i)); names[i] = s.exists() ? s.data().displayName : 'User'; }
+    catch { names[i] = 'User'; }
+  }));
 }
 
-function stopLoading() {
-  const bar = $('#loader-bar');
-  bar.style.width = '100%';
-  setTimeout(() => { bar.style.width = '0%'; }, 400);
-}
+/* ---------- auth ---------- */
+const friendly = c => ({
+  'auth/invalid-credential': 'Wrong email or password.',
+  'auth/email-already-in-use': 'This email already has an account. Please sign in.',
+  'auth/weak-password': 'Password needs 6 or more characters.',
+  'auth/invalid-email': 'This email is not valid.',
+  'auth/operation-not-allowed': 'Email login is not turned on in Firebase yet.',
+  'auth/network-request-failed': 'No internet. Try again.'
+}[c] || 'Something went wrong (' + c + ')');
 
-function el(tag, cls, text) { 
-  const e = document.createElement(tag); 
-  if (cls) e.className = cls; 
-  if (text) e.textContent = text; 
-  return e; 
+async function doAuth(up) {
+  const email = $('#em').value.trim(), pw = $('#pw').value; $('#aerr').textContent = '';
+  if (!email || pw.length < 6) { $('#aerr').textContent = 'Enter an email and a password of 6+ characters.'; return; }
+  try { up ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); }
+  catch (e) { $('#aerr').textContent = friendly(e.code); }
 }
-
-function show(id) { 
-  document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); 
-}
-
-function fmtTime(ts) {
-  if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function renderText(text) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
-}
+$('#bin').onclick = () => doAuth(false);
+$('#bup').onclick = () => doAuth(true);
+$('#out').onclick = () => signOut(auth);
 
 onAuthStateChanged(auth, async u => {
-  startLoading();
+  if (!u) {
+    me = prof = cur = null; if (unC) unC(); if (unL) unL(); unC = unL = null; show('vauth'); return;
+  }
+  if (me && me.uid === u.uid) return;
   me = u;
-  if (!u) { 
-    show('vauth');
-    stopLoading(); 
-    return; 
-  }
-  const snap = await getDoc(doc(db, 'users', u.uid));
-  if (!snap.exists()) {
-    show('vsetup');
-  } else {
-    prof = snap.data();
-    setDoc(doc(db, 'users', me.uid), { isOnline: true }, { merge: true }).catch(() => {});
-    loadHome();
-  }
-  stopLoading();
+  try {
+    const s = await getDoc(doc(db, 'users', u.uid));
+    if (!s.exists()) return show('vsetup');
+    prof = s.data(); names[u.uid] = prof.displayName; home();
+  } catch (e) { $('#aerr').textContent = 'Could not load your profile (' + e.code + ')'; show('vauth'); }
 });
 
-$('#bin').onclick = async () => {
-  startLoading();
-  $('#aerr').textContent = '';
-  try { 
-    await signInWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
-  } catch(e) { 
-    $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
-  }
-  stopLoading();
+$('#bsave').onclick = async () => {
+  const username = $('#un').value.trim().toLowerCase(), displayName = $('#dn').value.trim();
+  if (!/^[a-z0-9_]{3,20}$/.test(username) || !displayName) { $('#serr').textContent = 'Username: 3-20 letters, numbers or _. Display name is required.'; return; }
+  try {
+    await runTransaction(db, async t => {
+      const un = doc(db, 'usernames', username);
+      if ((await t.get(un)).exists()) throw new Error('taken');
+      t.set(un, { uid: me.uid });
+      t.set(doc(db, 'users', me.uid), { username, displayName });
+    });
+    prof = { username, displayName }; names[me.uid] = displayName; home();
+  } catch (e) { $('#serr').textContent = e.message === 'taken' ? 'That username is taken. Try another.' : 'Could not save (' + (e.code || e.message) + ')'; }
 };
 
-$('#bup').onclick = async () => {
-  startLoading();
-  $('#aerr').textContent = '';
-  try { 
-    await createUserWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
-  } catch(e) { 
-    $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
-  }
-  stopLoading();
-};
-
-$('#bprof').onclick = async () => {
-  startLoading();
-  const n = $('#pname').value.trim();
-  if (!n) { stopLoading(); return $('#perr').textContent = 'Enter username'; }
-  prof = { name: n, email: me.email, uid: me.uid, isOnline: true };
-  await setDoc(doc(db, 'users', me.uid), prof);
-  loadHome();
-  stopLoading();
-};
-
-async function loadHome() {
+/* ---------- home ---------- */
+function home() {
   show('vhome');
-  switchTab(currentTab);
-}
-
-function setTabActive(id) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('act'));
-  $(id).classList.add('act');
-}
-
-$('#tchats').onclick = () => switchTab('chats');
-$('#tgroups').onclick = () => switchTab('groups');
-$('#tstatus').onclick = () => switchTab('status');
-$('#tprof').onclick = () => switchTab('prof');
-
-async function switchTab(tab) {
-  startLoading();
-  currentTab = tab;
   if (unL) unL();
-  const box = $('#tabcontent');
-  box.innerHTML = '';
-  $('#bgp').style.display = 'none';
-  $('#srchbox').style.display = 'block';
-
-  if (tab === 'chats') {
-    setTabActive('#tchats');
-    $('#htitle').textContent = 'QAVLI Chats';
-    await fetchAllUsers();
-    loadChatsTab();
-  } else if (tab === 'groups') {
-    setTabActive('#tgroups');
-    $('#htitle').textContent = 'Groups';
-    $('#bgp').style.display = 'block';
-    loadGroupsTab();
-  } else if (tab === 'status') {
-    setTabActive('#tstatus');
-    $('#htitle').textContent = 'Status';
-    $('#srchbox').style.display = 'none';
-    loadStatusTab();
-  } else if (tab === 'prof') {
-    setTabActive('#tprof');
-    $('#htitle').textContent = 'My Profile';
-    $('#srchbox').style.display = 'none';
-    loadProfileTab();
-  }
-  stopLoading();
+  unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => renderList(snap.docs),
+    () => { $('#list').textContent = 'Could not load chats. Check your internet.'; });
+  const j = new URLSearchParams(location.search).get('join');
+  if (j) { history.replaceState(null, '', location.pathname); joinLink(j); }
 }
-
-async function fetchAllUsers() {
-  const uSnap = await getDocs(collection(db, 'users'));
-  usersCache = [];
-  uSnap.forEach(d => { 
-    names[d.id] = d.data().name || 'User'; 
-    if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
+async function renderList(docs) {
+  const items = docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 9e12) - ((a.createdAt && a.createdAt.seconds) || 9e12));
+  await ensureNames(items.filter(c => !c.isGroup).map(c => c.members.find(m => m !== me.uid)));
+  const L = $('#list'); L.textContent = '';
+  if (!items.length) { L.append(el('p', 'empty', 'No chats yet. Search a username above or create a group.')); return; }
+  items.forEach(c => {
+    const t = c.isGroup ? c.name : (names[c.members.find(m => m !== me.uid)] || 'Chat');
+    L.append(row(t, c.isGroup ? 'Group, ' + c.members.length + ' members' : '', () => openChat(c, t)));
   });
 }
 
-function loadChatsTab() {
-  unL = onSnapshot(collection(db, 'chats'), snap => {
-    renderChatsList(snap);
-  });
+let st;
+$('#q').oninput = () => { clearTimeout(st); st = setTimeout(search, 300); };
+async function search() {
+  const q = $('#q').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, ''), R = $('#res'); R.textContent = '';
+  if (q.length < 2) return;
+  try {
+    const s = await getDocs(query(collection(db, 'users'), where('username', '>=', q), where('username', '<=', q + '\uf8ff'), limit(10)));
+    let n = 0;
+    s.forEach(d => { if (d.id === me.uid) return; n++; const p = d.data(); R.append(row(p.displayName, '@' + p.username, () => startDM(d.id, p.displayName))); });
+    if (!n) R.append(el('p', 'empty', 'No user found with that username.'));
+  } catch (e) { R.append(el('p', 'empty', 'Search failed (' + e.code + ')')); }
 }
-
-function renderChatsList(snap) {
-  const box = $('#tabcontent');
-  box.innerHTML = '';
-  let list = [];
-  if (snap) {
-    snap.forEach(d => {
-      const c = { id: d.id, ...d.data() };
-      if (c.type === 'direct' && c.members && c.members.includes(me.uid)) {
-        list.push(c);
-      }
-    });
-  }
-
-  const queryStr = $('#src').value.toLowerCase().trim();
-  if (queryStr) {
-    const matchedUsers = usersCache.filter(u => (u.name || '').toLowerCase().includes(queryStr));
-    if (matchedUsers.length) {
-      matchedUsers.forEach(u => {
-        const row = el('button', 'row');
-        const avBox = el('div', 'av-box');
-        avBox.appendChild(el('div', 'av', (u.name || 'U')[0].toUpperCase()));
-        if (u.isOnline) avBox.appendChild(el('div', 'dot'));
-        
-        const meta = el('div');
-        meta.appendChild(el('b', '', u.name || 'User'));
-        meta.appendChild(el('small', '', '@' + (u.name || 'user') + ' • Tap to Chat'));
-        row.appendChild(avBox);
-        row.appendChild(meta);
-        row.onclick = () => startDirectChat(u.id, u.name);
-        box.appendChild(row);
-      });
-      return;
-    }
-  }
-
-  if (!list.length) {
-    box.appendChild(el('div', 'empty', 'No chats found. Search username above!'));
-    return;
-  }
-
-  list.forEach(c => {
-    const otherId = c.members.find(m => m !== me.uid);
-    const title = names[otherId] || 'Direct Chat';
-    const row = el('button', 'row');
-    const avBox = el('div', 'av-box');
-    avBox.appendChild(el('div', 'av', title[0].toUpperCase()));
-    
-    const meta = el('div');
-    meta.appendChild(el('b', '', title));
-    meta.appendChild(el('small', '', c.lastMsg || 'Tap to open chat'));
-    row.appendChild(avBox);
-    row.appendChild(meta);
-    row.onclick = () => openChat(c.id, title, c);
-    box.appendChild(row);
-  });
+async function startDM(other, title) {
+  const m = [me.uid, other].sort(), id = m.join('_'), ref = doc(db, 'chats', id);
+  try { const s = await getDoc(ref); if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp() }); }
+  catch (e) { return alert('Could not start chat (' + e.code + ')'); }
+  $('#q').value = ''; $('#res').textContent = '';
+  openChat({ id, isGroup: false, members: m }, title);
 }
-
-$('#src').oninput = () => {
-  if (currentTab === 'chats') renderChatsList(null);
+$('#bgrp').onclick = async () => {
+  const n = (prompt('Group name') || '').trim().slice(0, 60); if (!n) return;
+  try {
+    const r = await addDoc(collection(db, 'chats'), { isGroup: true, name: n, members: [me.uid], createdBy: me.uid, createdAt: serverTimestamp() });
+    openChat({ id: r.id, isGroup: true, name: n, members: [me.uid] }, n);
+  } catch (e) { alert('Could not create group (' + e.code + ')'); }
 };
-
-async function startDirectChat(otherUid, otherName) {
-  startLoading();
-  const q = query(collection(db, 'chats'), where('type', '==', 'direct'), where('members', 'array-contains', me.uid));
-  const snap = await getDocs(q);
-  let existingId = null, chatData = null;
-  snap.forEach(d => {
-    if (d.data().members.includes(otherUid)) {
-      existingId = d.id;
-      chatData = d.data();
-    }
-  });
-
-  if (existingId) {
-    openChat(existingId, otherName, chatData);
-  } else {
-    const ref = await addDoc(collection(db, 'chats'), {
-      type: 'direct',
-      members: [me.uid, otherUid],
-      updatedAt: serverTimestamp()
-    });
-    openChat(ref.id, otherName, { type: 'direct' });
-  }
-  stopLoading();
+async function joinLink(id) {
+  try {
+    const ref = doc(db, 'chats', id), s = await getDoc(ref);
+    if (!s.exists() || !s.data().isGroup) return alert('This invite link is not valid.');
+    const c = { id, ...s.data() };
+    if (c.members.includes(me.uid)) return openChat(c, c.name);
+    if (!confirm('Join the group "' + c.name + '"?')) return;
+    await updateDoc(ref, { members: arrayUnion(me.uid) });
+    openChat(c, c.name);
+  } catch (e) { alert('Could not join (' + e.code + ')'); }
 }
 
-function loadGroupsTab() {
-  unL = onSnapshot(collection(db, 'chats'), snap => {
-    const box = $('#tabcontent');
-    box.innerHTML = '';
-    let list = [];
-    snap.forEach(d => {
-      const c = { id: d.id, ...d.data() };
-      if (c.type === 'group') list.push(c);
-    });
-
-    if (!list.length) {
-      box.appendChild(el('div', 'empty', 'No groups yet. Tap "+ Group" to create.'));
-      return;
-    }
-
-    list.forEach(c => {
-      const row = el('button', 'row');
-      const avBox = el('div', 'av-box');
-      avBox.appendChild(el('div', 'av', (c.title || 'G')[0].toUpperCase()));
-      const meta = el('div');
-      meta.appendChild(el('b', '', c.title || 'Group'));
-      meta.appendChild(el('small', '', c.lastMsg || 'Tap to join group chat'));
-      row.appendChild(avBox);
-      row.appendChild(meta);
-      row.onclick = () => openChat(c.id, c.title, c);
-      box.appendChild(row);
-    });
-  });
-}
-
-function loadStatusTab() {
-  const box = $('#tabcontent');
-  box.innerHTML = `
-    <div style="padding:16px;">
-      <div class="row" style="border:none; padding:0; margin-bottom:20px;">
-        <div class="av-box"><div class="av">+</div></div>
-        <div><b>My Status</b><small>Tap to post 24h status</small></div>
-      </div>
-      <p class="mute" style="text-align:left;">Recent Updates</p>
-      <div class="empty">No status updates available.</div>
-    </div>
-  `;
-}
-
-function loadProfileTab() {
-  const box = $('#tabcontent');
-  box.innerHTML = `
-    <div style="padding:24px; text-align:center;">
-      <div class="av" style="width:80px; height:80px; font-size:36px; margin:0 auto 16px;">${(prof.name || 'U')[0].toUpperCase()}</div>
-      <h2>@${prof.name || 'User'}</h2>
-      <p class="mute">${me.email}</p>
-      <button id="btnlogout" style="margin-top:30px; background:#ea0038;">Logout</button>
-    </div>
-  `;
-  $('#btnlogout').onclick = async () => {
-    startLoading();
-    await setDoc(doc(db, 'users', me.uid), { isOnline: false }, { merge: true });
-    signOut(auth);
-    stopLoading();
-  };
-}
-
-function openChat(cid, title, data) {
-  startLoading();
-  cur = cid;
-  curChatData = data;
-  $('#ctitle').textContent = title;
-  
-  if (data && data.type === 'group') {
-    $('#binvite').style.display = 'inline-block';
-  } else {
-    $('#binvite').style.display = 'none';
-  }
-  
-  show('vchat');
-  
+/* ---------- chat ---------- */
+function openChat(c, title) {
+  cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
   if (unC) unC();
-  const q = query(collection(db, 'chats', cid, 'messages'), orderBy('time', 'asc'));
-  
-  unC = onSnapshot(q, snap => {
-    const box = $('#msgs');
-    box.innerHTML = '';
-    snap.forEach(d => {
-      const m = d.data();
-      const isMe = m.sender === me.uid;
-      const div = el('div', `msg ${isMe ? 'me' : ''}`);
-      
-      if (!isMe) div.appendChild(el('span', 'who', names[m.sender] || 'User'));
-      
-      const txt = el('span');
-      txt.innerHTML = renderText(m.text || '');
-      div.appendChild(txt);
-      
-      div.appendChild(el('span', 'time', fmtTime(m.time)));
-      box.appendChild(div);
-    });
-    box.scrollTop = box.scrollHeight;
-    stopLoading();
-  });
+  unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(50)), async snap => {
+    const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
+    await ensureNames(ms.map(m => m.senderId));
+    if (cur && cur.id === c.id) renderMsgs(ms);
+  }, () => { $('#msgs').textContent = ''; $('#msgs').append(el('p', 'empty', 'Could not load messages. Go back and try again.')); });
 }
-
-/* GROUP INVITE SHARE SYSTEM */
-$('#binvite').onclick = () => {
-  const inviteUrl = `${window.location.origin}${window.location.pathname}?group=${cur}`;
-  if (navigator.share) {
-    navigator.share({ title: 'Join QAVLI Group', url: inviteUrl });
-  } else {
-    navigator.clipboard.writeText(inviteUrl);
-    alert('Group Invite Link Copied to Clipboard!');
-  }
-};
-
-$('#fm').onsubmit = async e => {
+function renderMsgs(ms) {
+  const M = $('#msgs'), near = M.scrollHeight - M.scrollTop - M.clientHeight < 150; M.textContent = '';
+  ms.forEach(m => {
+    const mine = m.senderId === me.uid, d = el('div', 'msg' + (mine ? ' me' : ''));
+    if (cur.isGroup && !mine) d.append(el('b', 'who', names[m.senderId] || 'Member'));
+    const t = el('span');
+    m.text.split(/(https?:\/\/[^\s]+)/g).forEach(p => {
+      if (/^https?:\/\//.test(p)) { const a = el('a', '', p); a.href = p; a.target = '_blank'; a.rel = 'noopener noreferrer'; t.append(a); }
+      else t.append(document.createTextNode(p));
+    });
+    const when = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    d.append(t, el('i', 'time', m.pending ? 'Sending...' : when));
+    M.append(d);
+  });
+  if (near) M.scrollTop = M.scrollHeight;
+}
+$('#f').onsubmit = e => {
   e.preventDefault();
-  const input = $('#mi');
-  const text = input.value.trim();
-  if (!text || !cur) return;
-  input.value = '';
-  
-  await addDoc(collection(db, 'chats', cur, 'messages'), {
-    text,
-    sender: me.uid,
-    time: serverTimestamp()
-  });
-  
-  await setDoc(doc(db, 'chats', cur), {
-    lastMsg: text,
-    updatedAt: serverTimestamp()
-  }, { merge: true });
+  const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
+  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp() })
+    .catch(() => alert('Message not sent. Check your internet and try again.'));
 };
-
-$('#bback').onclick = () => loadHome();
-$('#bgp').onclick = () => show('vgp');
-$('#bgcan').onclick = () => loadHome();
-
-$('#bgc').onclick = async () => {
-  startLoading();
-  const t = $('#gtitle').value.trim();
-  if (!t) { stopLoading(); return $('#gerr').textContent = 'Enter group name'; }
-  
-  const ref = await addDoc(collection(db, 'chats'), {
-    title: t,
-    type: 'group',
-    created: serverTimestamp(),
-    members: [me.uid]
-  });
-  
-  $('#gtitle').value = '';
-  openChat(ref.id, t, { type: 'group' });
-  stopLoading();
+$('#back').onclick = () => { if (unC) { unC(); unC = null; } cur = null; show('vhome'); };
+$('#inv').onclick = () => {
+  const l = location.origin + location.pathname + '?join=' + cur.id;
+  if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
+  else prompt('Copy invite link', l);
 };
 </script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
   </html>
+  
