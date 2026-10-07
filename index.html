@@ -3,193 +3,195 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#075e54">
-<title>QAVLI Enterprise Pro</title>
+<meta name="theme-color" content="#14213d">
+<title>QAVLI</title>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
-:root {
-  --bg: #0b141a;
-  --card: #111b21;
-  --ink: #e9edef;
-  --mute: #8696a0;
-  --line: #222d34;
-  --header-bg: #202c33;
-  --mine: #005c4b;
-  --other: #202c33;
-  --accent: #00a884;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+:root{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#667089;--line:#dfe4ef;--brand:#14213d;--accent:#fca311;--mine:#fde3b0;--other:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#0c1426;--card:#141f38;--ink:#edf1fa;--mute:#93a0bd;--line:#26334f;--brand:#0c1426;--mine:#6b4a0c;--other:#1b2845}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.v{display:none;height:100%;flex-direction:column;max-width:640px;margin:0 auto;background:var(--bg)}
+.v.on{display:flex}
+.pad{padding:calc(32px + env(safe-area-inset-top)) 24px 24px;justify-content:center}
+.logo{width:64px;height:64px;border-radius:50% 50% 50% 14px;background:var(--accent);color:var(--brand);font:800 38px/64px Georgia,serif;text-align:center;margin-bottom:12px}
+h1{margin:0 0 4px;font:700 28px Georgia,serif;letter-spacing:.5px}
+.mute{color:var(--mute);margin:0 0 20px}
+input{width:100%;font:inherit;padding:13px 14px;margin-bottom:10px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:13px 16px;background:var(--accent);color:#14213d;font-weight:600}
+button.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.err{color:#d62839;min-height:22px;margin:6px 0}
+.bar{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:var(--brand);color:#fff}
+.bar h2{margin:0;font-size:18px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar button{background:rgba(255,255,255,.14);color:#fff;padding:8px 12px}
+.tools{padding:12px 14px 4px}
+.tools input{margin:0}
+.scroll{flex:1;overflow-y:auto;padding:6px 8px}
+.row{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);font-weight:400;padding:11px 10px;border-radius:12px}
+.row:hover{background:var(--card)}
+.row b{display:block}
+.row small{color:var(--mute)}
+.av{width:44px;height:44px;border-radius:50%;background:var(--brand);color:var(--accent);display:grid;place-items:center;font:700 18px Georgia,serif;flex:none;border:2px solid var(--accent)}
+.empty{color:var(--mute);text-align:center;padding:30px 20px}
+#msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:80%;align-self:flex-start;background:var(--other);padding:8px 12px;border-radius:16px 16px 16px 4px;overflow-wrap:anywhere;border:1px solid var(--line)}
+.msg.me{align-self:flex-end;background:var(--mine);border-radius:16px 16px 4px 16px}
+.msg a{color:inherit;text-decoration:underline}
+.who{display:block;font-size:13px;color:var(--mute)}
+.time{display:block;text-align:right;font-size:11px;color:var(--mute);font-style:normal}
+form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+form input{margin:0}
 
-/* TOP PROGRESS BAR (PATTI) */
-#loader-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 0%;
-  height: 3px;
-  background: var(--accent);
-  z-index: 9999;
-  transition: width 0.3s ease;
-}
+[hidden]{display:none!important}
+.row>div:nth-child(2){flex:1;min-width:0}
+.row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--accent);flex:none}
+.quote{border-left:3px solid var(--accent);padding:2px 8px;margin-bottom:4px;font-size:14px;color:var(--mute);background:rgba(128,128,128,.12);border-radius:6px}
+.quote b{display:block;font-size:12px}
+.del{opacity:.7;font-style:italic}
+.reacts{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.reacts span{font-size:13px;padding:1px 7px;border-radius:10px;background:rgba(128,128,128,.18)}
+.reacts span.mine{outline:1px solid var(--accent)}
+.rbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--card);border-top:1px solid var(--line);font-size:14px}
+.rbar div{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbar button{padding:6px 12px}
+#sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);align-items:flex-end;justify-content:center;z-index:9}
+#sheet.on{display:flex}
+#sbox{background:var(--card);width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.emo{display:flex;justify-content:space-around}
+.emo .e{background:transparent;font-size:26px;padding:6px 10px}
+.act{width:100%;text-align:left}
 
-.v { display: none; height: 100%; flex-direction: column; max-width: 600px; margin: 0 auto; background: var(--bg); position: relative; }
-.v.on { display: flex; }
-.pad { padding: 40px 24px; justify-content: center; background: var(--card); }
-.logo { width: 70px; height: 70px; border-radius: 50%; background: var(--accent); color: #fff; font: bold 36px/70px sans-serif; text-align: center; margin: 0 auto 16px; }
-h1 { text-align: center; margin-bottom: 6px; font-size: 26px; }
-.mute { text-align: center; color: var(--mute); margin-bottom: 24px; font-size: 14px; }
-input, textarea { width: 100%; font: inherit; padding: 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); outline: none; }
-input:focus, textarea:focus { border-color: var(--accent); }
-button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; padding: 14px; background: var(--accent); color: #fff; font-weight: 600; width: 100%; }
-button.sec { background: transparent; color: var(--ink); border: 1px solid var(--line); margin-top: 8px; }
-.err { color: #ea0038; font-size: 13px; text-align: center; min-height: 20px; margin-bottom: 10px; }
-
-/* Header & Navigation */
-.bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--header-bg); color: #fff; }
-.bar h2 { font-size: 18px; flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.bar button { width: auto; padding: 8px 12px; font-size: 13px; background: rgba(255,255,255,0.15); color: #fff; }
-.tools { padding: 10px 14px; background: var(--card); border-bottom: 1px solid var(--line); }
-.tools input { margin: 0; padding: 10px; }
-.scroll { flex: 1; overflow-y: auto; background: var(--card); padding-bottom: 65px; }
-.row { display: flex; width: 100%; align-items: center; gap: 14px; padding: 14px 16px; border: 0; background: transparent; color: var(--ink); border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; }
-.row:active { background: var(--line); }
-.row b { display: block; font-size: 16px; }
-.row small { color: var(--mute); font-size: 13px; }
-.av-box { position: relative; flex: none; }
-.av { width: 46px; height: 46px; border-radius: 50%; background: #008069; color: #fff; display: grid; place-items: center; font-weight: bold; font-size: 20px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: #25d366; position: absolute; bottom: 0; right: 0; border: 2px solid var(--card); }
-
-/* Chat Area */
-#msgs { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
-.msg { max-width: 80%; align-self: flex-start; background: var(--other); padding: 8px 12px; border-radius: 0px 12px 12px 12px; font-size: 15px; word-break: break-word; }
-.msg.me { align-self: flex-end; background: var(--mine); border-radius: 12px 0px 12px 12px; }
-.msg a { color: #53bdeb; text-decoration: underline; }
-.who { display: block; font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 2px; }
-.time { display: block; text-align: right; font-size: 10px; color: var(--mute); margin-top: 4px; }
-form { display: flex; gap: 8px; padding: 10px 12px; background: var(--header-bg); }
-form input { margin: 0; border-radius: 20px; padding: 12px 16px; }
-form button { width: auto; border-radius: 50%; padding: 12px 16px; }
-.empty { color: var(--mute); text-align: center; padding: 40px 20px; font-size: 14px; }
-
-/* Navigation Tabs */
-.tabs { display: flex; position: absolute; bottom: 0; left: 0; right: 0; background: var(--header-bg); border-top: 1px solid var(--line); height: 55px; }
-.tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mute); font-size: 11px; background: none; border: 0; padding: 0; }
-.tab.act { color: var(--accent); font-weight: bold; }
-.tab-icon { font-size: 18px; margin-bottom: 2px; }
-.icon-btn { background: transparent; border: 0; color: #fff; font-size: 18px; padding: 4px; width: auto; cursor: pointer; }
+.tab{display:none;flex:1;min-height:0;flex-direction:column}
+.tab.on{display:flex}
+.nav{display:flex;border-top:1px solid var(--line);background:var(--card);padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;background:transparent;color:var(--mute);border-radius:0;padding:8px 4px;font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px}
+.nav button.on{color:var(--ink)}
+.nav button.on svg{stroke:var(--accent)}
+.nav svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.srow{display:flex;width:100%;align-items:center;gap:12px;text-align:left;background:transparent;color:var(--ink);font-weight:400;padding:12px 14px;border-radius:12px;margin:2px 0}
+.srow>div:not(.av){flex:1;min-width:0}
+.srow b{display:block}.srow small{color:var(--mute)}
+.srow.hl{border:1px solid var(--accent);background:rgba(252,163,17,.12)}
+.soonrow{opacity:.6}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(128,128,128,.22);color:var(--mute);font-weight:500;flex:none}
+.sprof{display:flex;align-items:center;gap:14px;padding:18px 14px}
+.sprof small{color:var(--mute);display:block}
+.av.big{width:60px;height:60px;font-size:26px}
+.shead{padding:12px 14px 4px;color:var(--mute);font-size:13px;text-transform:uppercase;letter-spacing:.6px}
+.logout{margin:14px;width:calc(100% - 28px);color:#d62839}
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#14213d;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+.bar #back{font-size:24px;line-height:1;padding:4px 14px}
+.bar .ib{padding:8px 10px;font-size:17px;opacity:.55}
+form .ib{background:transparent;color:var(--ink);padding:8px;font-size:20px;opacity:.55}
+.act{display:flex;justify-content:space-between;align-items:center}
+#sbox>b{font-size:18px}
+.linkbox{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px;word-break:break-all;font-size:14px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}.btnrow button{flex:1}
+.mlist{max-height:30vh;overflow:auto;padding:4px 0}.mlist div{padding:6px 2px;border-bottom:1px solid var(--line)}
+.empty button{margin-top:10px}
+.sk{height:58px;margin:8px 10px;border-radius:14px;background:linear-gradient(90deg,var(--card),var(--line),var(--card));background-size:200% 100%;align-self:stretch;flex:none}
+@media(prefers-reduced-motion:no-preference){.sk{animation:sh 1.3s linear infinite}@keyframes sh{to{background-position:-200% 0}}}
+.day{align-self:center;font-size:12px;color:var(--mute);background:var(--card);border:1px solid var(--line);padding:2px 12px;border-radius:12px;margin:6px 0}
+#offline{position:fixed;top:0;left:0;right:0;background:#d62839;color:#fff;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;font-size:13px;z-index:30}
+.tw{flex:1;min-width:0}.tw h2{flex:none}
+.tw small{display:block;font-size:12px;opacity:.8;min-height:15px}
+.bar .ib.ia{opacity:1}
+.fwd{display:block;font-size:12px;color:var(--mute);font-style:italic}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:8px}.mrow button{padding:4px 10px}
+:root[data-theme="dark"]{--bg:#0c1426;--card:#141f38;--ink:#edf1fa;--mute:#93a0bd;--line:#26334f;--brand:#0c1426;--mine:#6b4a0c;--other:#1b2845}
+:root[data-theme="light"]{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#667089;--line:#dfe4ef;--brand:#14213d;--mine:#fde3b0;--other:#fff}
+#epanel{display:flex;flex-wrap:wrap;gap:2px;padding:8px 10px;background:var(--card);border-top:1px solid var(--line);max-height:132px;overflow:auto}
+#epanel button{background:transparent;font-size:24px;padding:4px 7px}
 </style>
 </head>
 <body>
 
-<div id="loader-bar"></div>
+<div id="vsplash" class="v on pad" style="align-items:center;text-align:center"><div class="logo">Q</div><h1>QAVLI</h1></div>
 
-<!-- AUTH SCREEN -->
-<div id="vauth" class="v on pad">
+<div id="vauth" class="v pad">
   <div class="logo">Q</div>
-  <h1>QAVLI Pro</h1>
-  <p class="mute">Enterprise Messaging App</p>
-  <input id="em" type="email" placeholder="Email">
-  <input id="pw" type="password" placeholder="Password (6+ chars)">
-  <div class="err" id="aerr"></div>
-  <button id="bin">Sign In</button>
-  <button id="bup" class="sec">Create Account</button>
+  <h1>QAVLI</h1>
+  <p class="mute">Sign in to start chatting.</p>
+  <input id="em" type="email" placeholder="Email" autocomplete="email">
+  <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
+  <div class="err" id="aerr" role="alert"></div>
+  <button id="bin">Sign in</button>
+  <p></p>
+  <button id="bup" class="sec">Create account</button>
 </div>
 
-<!-- PROFILE & USERNAME SETUP -->
 <div id="vsetup" class="v pad">
-  <h1>Create Profile</h1>
-  <p class="mute">Set your Unique Username (a-z, 0-9, _)</p>
-  <input id="pusername" type="text" placeholder="Username (e.g. john_doe)">
-  <input id="pdisplay" type="text" placeholder="Display Name (e.g. John Doe)">
-  <div class="err" id="perr"></div>
-  <button id="bprof">Save Profile</button>
+  <div class="logo">Q</div>
+  <h1>Your profile</h1>
+  <p class="mute">Friends find you by username.</p>
+  <input id="un" placeholder="Username (a-z, 0-9, _)" maxlength="20" autocapitalize="none">
+  <input id="dn" placeholder="Display name" maxlength="40">
+  <div class="err" id="serr" role="alert"></div>
+  <button id="bsave">Save profile</button>
 </div>
 
-<!-- HOME SCREEN -->
 <div id="vhome" class="v">
-  <div class="bar">
-    <h2 id="htitle">QAVLI Chats</h2>
-    <button id="bgp" style="display:none;">+ Group</button>
-  </div>
-  
-  <div class="tools" id="srchbox">
-    <input id="src" type="search" placeholder="Search users by username...">
+  <div class="bar"><h2 id="htitle">Chats</h2><button id="bgrp">New group</button></div>
+
+  <div id="tab-chats" class="tab on">
+    <div class="tools"><input id="q" placeholder="Search chats or find people by username" autocapitalize="none"></div>
+    <div class="scroll"><div id="res"></div><div id="list"></div></div>
   </div>
 
-  <div class="scroll" id="tabcontent"></div>
+  <div id="tab-status" class="tab"><div class="scroll">
+    <div class="srow soonrow" data-soon="Status updates"><div class="av">+</div><div><b>My status</b><small>Tap to add a status update</small></div><span class="pill">Soon</span></div>
+    <div class="shead">Recent updates</div>
+    <p class="empty">Status updates from your friends will appear here.</p>
+    <p class="empty"><span class="pill">Coming soon</span><br>Text, photo and video status that disappears after 24 hours.</p>
+  </div></div>
 
-  <div class="tabs">
-    <button class="tab act" id="tchats">
-      <span class="tab-icon">💬</span>
-      <span>Chats</span>
-    </button>
-    <button class="tab" id="tgroups">
-      <span class="tab-icon">👥</span>
-      <span>Groups</span>
-    </button>
-    <button class="tab" id="tstatus">
-      <span class="tab-icon">⭕</span>
-      <span>Status</span>
-    </button>
-    <button class="tab" id="tprof">
-      <span class="tab-icon">⚙️</span>
-      <span>Profile</span>
-    </button>
-  </div>
+  <div id="tab-calls" class="tab"><div class="scroll">
+    <div class="srow soonrow" data-soon="Voice and video calls"><div class="av">+</div><div><b>Start a call</b><small>Voice and video calls with friends</small></div><span class="pill">Soon</span></div>
+    <div class="shead">Recent</div>
+    <p class="empty">No calls yet.</p>
+    <p class="empty"><span class="pill">Coming soon</span><br>Voice and video calling needs extra servers, so it is not active in the free version.</p>
+  </div></div>
+
+  <div id="tab-settings" class="tab"><div class="scroll">
+    <div id="sprof" class="sprof"></div>
+    <div id="slist"></div>
+    <button id="out" class="sec logout">Sign out</button>
+  </div></div>
+
+  <nav class="nav">
+    <button id="n-chats" class="on" data-t="chats"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg><span>Chats</span></button>
+    <button id="n-status" data-t="status"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg><span>Status</span></button>
+    <button id="n-calls" data-t="calls"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/></svg><span>Calls</span></button>
+    <button id="n-settings" data-t="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg><span>Settings</span></button>
+  </nav>
 </div>
 
-<!-- CHAT SCREEN -->
 <div id="vchat" class="v">
-  <div class="bar">
-    <button id="bback" style="width:auto; padding:6px 12px;">←</button>
-    <h2 id="ctitle">Chat</h2>
-    <button class="icon-btn" id="binvite" title="Share Group Invite Link" style="display:none;">🔗</button>
-  </div>
+  <div class="bar"><button id="back" aria-label="Back">&#8249;</button><div class="tw"><h2 id="ct"></h2><small id="sub"></small></div><button class="ib ia" id="srch" aria-label="Search chat">&#128269;</button><button class="ib" data-soon="Voice calls" aria-label="Voice call">&#128222;</button><button class="ib" data-soon="Video calls" aria-label="Video call">&#127909;</button><button id="info" class="ib ia" aria-label="Chat options">&#8942;</button></div>
   <div id="msgs"></div>
-  <form id="fm">
-    <input id="mi" type="text" placeholder="Type a message..." autocomplete="off">
-    <button type="submit">➤</button>
-  </form>
+  <div id="rbar" class="rbar" hidden><div id="rtxt"></div><button id="rx" class="sec" type="button">X</button></div>
+  <div id="epanel" hidden></div>
+  <form id="f"><button type="button" class="ib ia" id="emo" aria-label="Emoji">&#128512;</button><button type="button" class="ib ia" id="att" aria-label="Attach">&#128206;</button><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
 
-<!-- NEW GROUP MODAL -->
-<div id="vgp" class="v pad">
-  <h1>New Group</h1>
-  <p class="mute">Create a new secure group</p>
-  <input id="gtitle" type="text" placeholder="Group Name">
-  <div class="err" id="gerr"></div>
-  <button id="bgc">Create Group</button>
-  <button id="bgcan" class="sec">Cancel</button>
-</div>
+<div id="offline" hidden>You are offline. Messages will send when you reconnect.</div>
+<div id="toast" role="status"></div>
+<div id="sheet"><div id="sbox"></div></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  setPersistence,
-  browserLocalPersistence 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  setDoc, 
-  addDoc, 
-  writeBatch,
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  onSnapshot, 
-  serverTimestamp,
-  arrayUnion 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {initializeAuth,indexedDBLocalPersistence,browserLocalPersistence,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,arrayRemove,deleteField,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
@@ -197,409 +199,94 @@ const firebaseConfig = {
   projectId: "qavli-37983",
   appId: "1:168938701514:web:783d81a63d8e4423e56a33"
 };
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-setPersistence(auth, browserLocalPersistence).catch(console.error);
-
+const app = initializeApp(firebaseConfig), auth = initializeAuth(app, { persistence: [indexedDBLocalPersistence, browserLocalPersistence] });
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch {}
+let db; try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); } catch { db = getFirestore(app); }
+function lsGet(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+function applyTheme(t) { if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t; }
+applyTheme(lsGet('qv_theme', 'auto'));
 const $ = s => document.querySelector(s);
-let me = null, prof = null, cur = null, curChatData = null, unC = null, unL = null, names = {}, currentTab = 'chats', usersCache = [];
+const EMOJI = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}', '\u{1F64F}'];
+let me = null, prof = null, cur = null, unC = null, unL = null, names = lsGet('qv_names', {}), chats = {}, lastMs = [], replyTo = null, lastReadAt = 0, unP = null, otherSeen = null, msgFilter = '', lastTyping = 0, msgLimit = 30, more = false, chatFilter = '';
 
-function startLoading() {
-  const bar = $('#loader-bar');
-  bar.style.width = '30%';
-  setTimeout(() => bar.style.width = '70%', 200);
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
+function row(title, sub, onclick, dot) {
+  const b = el('button', 'row'); b.append(el('div', 'av', (title || '?')[0].toUpperCase()));
+  const t = el('div'); t.append(el('b', '', title)); if (sub) t.append(el('small', '', sub));
+  b.append(t); if (dot) b.append(el('span', 'dot')); b.onclick = onclick; return b;
 }
-
-function stopLoading() {
-  const bar = $('#loader-bar');
-  bar.style.width = '100%';
-  setTimeout(() => { bar.style.width = '0%'; }, 400);
+const fresh = new Set(); let namesChanged = false;
+async function ensureNames(ids) {
+  const all = [...new Set(ids)].filter(i => i && !fresh.has(i)); all.forEach(i => fresh.add(i));
+  if (!all.length) return;
+  const needWait = all.some(i => !names[i]);
+  const job = Promise.all(all.map(async i => {
+    try { const s = await getDoc(doc(db, 'users', i)); const n = s.exists() ? s.data().displayName : 'User'; if (names[i] !== n) { if (names[i]) namesChanged = true; names[i] = n; } }
+    catch { if (!names[i]) names[i] = 'User'; }
+  })).then(() => { lsSet('qv_names', names); if (namesChanged) { namesChanged = false; if (cur && lastMs.length) renderMsgs(lastMs); renderList(); } });
+  if (needWait) await job;
 }
+const secs = t => (t && t.seconds) || 0;
 
-function el(tag, cls, text) { 
-  const e = document.createElement(tag); 
-  if (cls) e.className = cls; 
-  if (text) e.textContent = text; 
-  return e; 
+/* ---------- auth ---------- */
+const friendly = c => ({
+  'auth/invalid-credential': 'Wrong email or password.',
+  'auth/email-already-in-use': 'This email already has an account. Please sign in.',
+  'auth/weak-password': 'Password needs 6 or more characters.',
+  'auth/invalid-email': 'This email is not valid.',
+  'auth/operation-not-allowed': 'Email login is not turned on in Firebase yet.',
+  'auth/network-request-failed': 'No internet. Try again.'
+}[c] || 'Something went wrong (' + c + ')');
+
+async function doAuth(up) {
+  const email = $('#em').value.trim(), pw = $('#pw').value; $('#aerr').textContent = '';
+  if (!email || pw.length < 6) { $('#aerr').textContent = 'Enter an email and a password of 6+ characters.'; return; }
+  try { up ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); }
+  catch (e) { $('#aerr').textContent = friendly(e.code); }
 }
+$('#bin').onclick = () => doAuth(false);
+$('#bup').onclick = () => doAuth(true);
+$('#out').onclick = () => signOut(auth);
 
-function show(id) { 
-  document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); 
-}
-
-function fmtTime(ts) {
-  if (!ts) return '';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-function renderText(text) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener">${url}</a>`);
-}
-
-/* AUTHENTICATION LISTENER */
 onAuthStateChanged(auth, async u => {
-  startLoading();
+  if (!u) {
+    me = prof = cur = null; chats = {}; lastMs = []; replyTo = null;
+    if (unC) unC(); if (unL) unL(); unC = unL = null; if (unP) { unP(); unP = null; } show('vauth'); return;
+  }
+  if (me && me.uid === u.uid) return;
   me = u;
-  if (!u) { 
-    show('vauth');
-    stopLoading(); 
-    return; 
+  try {
+    const s = await getDoc(doc(db, 'users', u.uid));
+    if (!s.exists()) return show('vsetup');
+    prof = s.data(); lsSet('qv_prof_' + u.uid, prof); names[u.uid] = prof.displayName; home();
+  } catch (e) {
+    const p = lsGet('qv_prof_' + u.uid, null);
+    if (p) { prof = p; names[u.uid] = p.displayName; home(); } else { $('#aerr').textContent = 'Could not load your profile (' + e.code + ')'; show('vauth'); }
   }
-  const snap = await getDoc(doc(db, 'users', u.uid));
-  if (!snap.exists()) {
-    show('vsetup');
-  } else {
-    prof = snap.data();
-    setDoc(doc(db, 'users', me.uid), { isOnline: true }, { merge: true }).catch(() => {});
-    
-    // Process Invite Link Join Query
-    const params = new URLSearchParams(window.location.search);
-    const groupId = params.get('group');
-    if (groupId) {
-      await handleGroupInvite(groupId);
-    } else {
-      loadHome();
-    }
-  }
-  stopLoading();
 });
 
-/* JOIN GROUP VIA LINK ACCORDING TO RULES */
-async function handleGroupInvite(groupId) {
+$('#bsave').onclick = async () => {
+  const username = $('#un').value.trim().toLowerCase(), displayName = $('#dn').value.trim();
+  $('#serr').textContent = '';
+  if (!/^[a-z0-9_]{3,20}$/.test(username) || !displayName) { $('#serr').textContent = 'Username: 3-20 letters, numbers or _. Display name is required.'; return; }
   try {
-    const gRef = doc(db, 'chats', groupId);
-    const gSnap = await getDoc(gRef);
-    if (gSnap.exists() && gSnap.data().isGroup) {
-      await setDoc(gRef, {
-        members: arrayUnion(me.uid)
-      }, { merge: true });
-      openChat(groupId, gSnap.data().name, gSnap.data());
-      return;
-    }
-  } catch(e) {
-    console.error("Invite error", e);
-  }
-  loadHome();
-}
-
-$('#bin').onclick = async () => {
-  startLoading();
-  $('#aerr').textContent = '';
-  try { 
-    await signInWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
-  } catch(e) { 
-    $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
-  }
-  stopLoading();
-};
-
-$('#bup').onclick = async () => {
-  startLoading();
-  $('#aerr').textContent = '';
-  try { 
-    await createUserWithEmailAndPassword(auth, $('#em').value, $('#pw').value); 
-  } catch(e) { 
-    $('#aerr').textContent = e.message.replace('Firebase: ', ''); 
-  }
-  stopLoading();
-};
-
-/* ATOMIC USERNAME & PROFILE SAVE (BATCH TRANSACTION) */
-$('#bprof').onclick = async () => {
-  startLoading();
-  $('#perr').textContent = '';
-  const uname = $('#pusername').value.trim().toLowerCase();
-  const dname = $('#pdisplay').value.trim();
-  
-  if (!/^[a-z0-9_]{3,20}$/.test(uname)) {
-    stopLoading();
-    return $('#perr').textContent = 'Username must be 3-20 chars (a-z, 0-9, _ only)';
-  }
-  if (!dname || dname.length > 40) {
-    stopLoading();
-    return $('#perr').textContent = 'Display Name required (max 40 chars)';
-  }
-
-  try {
-    const batch = writeBatch(db);
-    const userRef = doc(db, 'users', me.uid);
-    const usernameRef = doc(db, 'usernames', uname);
-
-    batch.set(userRef, {
-      username: uname,
-      displayName: dname,
-      createdAt: serverTimestamp(),
-      isOnline: true
+    await runTransaction(db, async t => {
+      const un = doc(db, 'usernames', username);
+      if ((await t.get(un)).exists()) throw new Error('taken');
+      t.set(un, { uid: me.uid });
+      t.set(doc(db, 'users', me.uid), { username, displayName });
     });
-
-    batch.set(usernameRef, {
-      uid: me.uid,
-      createdAt: serverTimestamp()
-    });
-
-    await batch.commit();
-    prof = { username: uname, displayName: dname, isOnline: true };
-    loadHome();
-  } catch (e) {
-    $('#perr').textContent = 'Username already taken or invalid transaction.';
-  }
-  stopLoading();
+    prof = { username, displayName }; names[me.uid] = displayName; home();
+  } catch (e) { $('#serr').textContent = e.message === 'taken' ? 'That username is taken. Try another.' : 'Could not save (' + (e.code || e.message) + ')'; }
 };
 
-async function loadHome() {
-  show('vhome');
-  switchTab(currentTab);
-}
-
-function setTabActive(id) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('act'));
-  $(id).classList.add('act');
-}
-
-$('#tchats').onclick = () => switchTab('chats');
-$('#tgroups').onclick = () => switchTab('groups');
-$('#tstatus').onclick = () => switchTab('status');
-$('#tprof').onclick = () => switchTab('prof');
-
-async function switchTab(tab) {
-  startLoading();
-  currentTab = tab;
+/* ---------- home ---------- */
+function home() {
+  show('vhome'); renderSettings(); setTab('chats'); beat();
+  const L0 = $('#list'); L0.textContent = ''; for (let i = 0; i < 4; i++) L0.append(el('div', 'sk'));
   if (unL) unL();
-  const box = $('#tabcontent');
-  box.innerHTML = '';
-  $('#bgp').style.display = 'none';
-  $('#srchbox').style.display = 'block';
-
-  if (tab === 'chats') {
-    setTabActive('#tchats');
-    $('#htitle').textContent = 'QAVLI Chats';
-    await fetchAllUsers();
-    loadChatsTab();
-  } else if (tab === 'groups') {
-    setTabActive('#tgroups');
-    $('#htitle').textContent = 'Groups';
-    $('#bgp').style.display = 'block';
-    loadGroupsTab();
-  } else if (tab === 'status') {
-    setTabActive('#tstatus');
-    $('#htitle').textContent = 'Status';
-    $('#srchbox').style.display = 'none';
-    loadStatusTab();
-  } else if (tab === 'prof') {
-    setTabActive('#tprof');
-    $('#htitle').textContent = 'My Profile';
-    $('#srchbox').style.display = 'none';
-    loadProfileTab();
-  }
-  stopLoading();
-}
-
-async function fetchAllUsers() {
-  const uSnap = await getDocs(collection(db, 'users'));
-  usersCache = [];
-  uSnap.forEach(d => { 
-    names[d.id] = d.data().displayName || d.data().username || 'User'; 
-    if (d.id !== me.uid) usersCache.push({ id: d.id, ...d.data() });
-  });
-}
-
-function loadChatsTab() {
-  const q = query(collection(db, 'chats'), where('members', 'array-contains', me.uid));
-  unL = onSnapshot(q, snap => {
-    renderChatsList(snap);
-  });
-}
-
-function renderChatsList(snap) {
-  const box = $('#tabcontent');
-  box.innerHTML = '';
-  let list = [];
-  if (snap) {
-    snap.forEach(d => {
-      const c = { id: d.id, ...d.data() };
-      if (c.isGroup === false) list.push(c);
-    });
-  }
-
-  const queryStr = $('#src').value.toLowerCase().trim();
-  if (queryStr) {
-    const matchedUsers = usersCache.filter(u => 
-      (u.username || '').toLowerCase().includes(queryStr) || 
-      (u.displayName || '').toLowerCase().includes(queryStr)
-    );
-    if (matchedUsers.length) {
-      matchedUsers.forEach(u => {
-        const row = el('button', 'row');
-        const avBox = el('div', 'av-box');
-        const nameToShow = u.displayName || u.username;
-        avBox.appendChild(el('div', 'av', nameToShow[0].toUpperCase()));
-        if (u.isOnline) avBox.appendChild(el('div', 'dot'));
-        
-        const meta = el('div');
-        meta.appendChild(el('b', '', nameToShow));
-        meta.appendChild(el('small', '', '@' + u.username + ' • Tap to Chat'));
-        row.appendChild(avBox);
-        row.appendChild(meta);
-        row.onclick = () => startDirectChat(u.id);
-        box.appendChild(row);
-      });
-      return;
-    }
-  }
-
-  if (!list.length) {
-    box.appendChild(el('div', 'empty', 'No active chats. Search username above!'));
-    return;
-  }
-
-  list.forEach(c => {
-    const otherId = c.members.find(m => m !== me.uid);
-    const title = names[otherId] || 'Direct Chat';
-    const row = el('button', 'row');
-    const avBox = el('div', 'av-box');
-    avBox.appendChild(el('div', 'av', title[0].toUpperCase()));
-    
-    const meta = el('div');
-    meta.appendChild(el('b', '', title));
-    meta.appendChild(el('small', '', (c.lastMessage && c.lastMessage.text) ? c.lastMessage.text : 'Tap to open chat'));
-    row.appendChild(avBox);
-    row.appendChild(meta);
-    row.onclick = () => openChat(c.id, title, c);
-    box.appendChild(row);
-  });
-}
-
-$('#src').oninput = () => {
-  if (currentTab === 'chats') renderChatsList(null);
-};
-
-/* DETERMINISTIC DIRECT CHAT ID: UID1_UID2 */
-async function startDirectChat(otherUid) {
-  startLoading();
-  const sortedUids = [me.uid, otherUid].sort();
-  const deterministicChatId = sortedUids[0] + '_' + sortedUids[1];
-  
-  const cRef = doc(db, 'chats', deterministicChatId);
-  const cSnap = await getDoc(cRef);
-
-  if (cSnap.exists()) {
-    openChat(deterministicChatId, names[otherUid] || 'Chat', cSnap.data());
-  } else {
-    const chatPayload = {
-      isGroup: false,
-      name: 'Direct Chat',
-      members: sortedUids,
-      createdBy: me.uid,
-      createdAt: serverTimestamp(),
-      lastMessage: { text: '', senderId: me.uid, at: '' },
-      adminIds: [me.uid]
-    };
-    await setDoc(cRef, chatPayload);
-    openChat(deterministicChatId, names[otherUid] || 'Chat', chatPayload);
-  }
-  stopLoading();
-}
-
-function loadGroupsTab() {
-  const q = query(collection(db, 'chats'), where('members', 'array-contains', me.uid));
-  unL = onSnapshot(q, snap => {
-    const box = $('#tabcontent');
-    box.innerHTML = '';
-    let list = [];
-    snap.forEach(d => {
-      const c = { id: d.id, ...d.data() };
-      if (c.isGroup === true) list.push(c);
-    });
-
-    if (!list.length) {
-      box.appendChild(el('div', 'empty', 'No groups joined yet. Click "+ Group" to create.'));
-      return;
-    }
-
-    list.forEach(c => {
-      const row = el('button', 'row');
-      const avBox = el('div', 'av-box');
-      avBox.appendChild(el('div', 'av', (c.name || 'G')[0].toUpperCase()));
-      const meta = el('div');
-      meta.appendChild(el('b', '', c.name || 'Group'));
-      meta.appendChild(el('small', '', (c.lastMessage && c.lastMessage.text) ? c.lastMessage.text : 'Tap to open group'));
-      row.appendChild(avBox);
-      row.appendChild(meta);
-      row.onclick = () => openChat(c.id, c.name, c);
-      box.appendChild(row);
-    });
-  });
-}
-
-function loadStatusTab() {
-  const box = $('#tabcontent');
-  box.innerHTML = `
-    <div style="padding:16px;">
-      <div class="row" style="border:none; padding:0; margin-bottom:20px;">
-        <div class="av-box"><div class="av">+</div></div>
-        <div><b>My Status</b><small>Tap to share an update</small></div>
-      </div>
-      <p class="mute" style="text-align:left;">Recent Updates</p>
-      <div class="empty">No status updates available.</div>
-    </div>
-  `;
-}
-
-function loadProfileTab() {
-  const box = $('#tabcontent');
-  box.innerHTML = `
-    <div style="padding:24px; text-align:center;">
-      <div class="av" style="width:80px; height:80px; font-size:36px; margin:0 auto 16px;">${(prof.displayName || 'U')[0].toUpperCase()}</div>
-      <h2>${prof.displayName || 'User'}</h2>
-      <p class="mute">@${prof.username || 'username'}</p>
-      <button id="btnlogout" style="margin-top:30px; background:#ea0038;">Logout</button>
-    </div>
-  `;
-  $('#btnlogout').onclick = async () => {
-    startLoading();
-    await setDoc(doc(db, 'users', me.uid), { isOnline: false }, { merge: true });
-    signOut(auth);
-    stopLoading();
-  };
-}
-
-function openChat(cid, title, data) {
-  startLoading();
-  cur = cid;
-  curChatData = data;
-  $('#ctitle').textContent = title;
-  
-  if (data && data.isGroup) {
-    $('#binvite').style.display = 'inline-block';
-  } else {
-    $('#binvite').style.display = 'none';
-  }
-  
-  show('vchat');
-  
-  if (unC) unC();
-  const q = query(collection(db, 'chats', cid, 'messages'), orderBy('createdAt', 'asc'));
-  
-  unC = onSnapshot(q, snap => {
-    const box = $('#msgs');
-    box.innerHTML = '';
-    snap.forEach(d => {
-      const m = d.data();
-      const isMe = m.senderId === me.uid;
-      const div = el('div', `msg ${isMe ? 'me' : ''}`);
-      
-      if (!isMe) div.appendChild(el('span', 'who', names[m.senderId] || 'User'));
-      
-      const txt = el('span');
-      txt.innerHTML = renderText(m.text || '');
-      div.appendChild(txt);
-      
-      div.appendChild(el('span', 'time', fmtTime(m.createdAt)));
-      box.appendChild(div);
-    });
-    box
+  unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => {
+    chats = {}; snap.docs.forEach(d => { chats[d.id] = { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }; });
+    if (cur && chats[cur.id]) { cur = { ...cur, ...chats[cur.id] }; if (lastMs.length) renderMsgs(lastMs); updat
