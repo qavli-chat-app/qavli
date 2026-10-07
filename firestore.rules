@@ -1,0 +1,118 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function chatData(chatId) {
+      return get(/databases/$(database)/documents/chats/$(chatId)).data;
+    }
+
+    function isChatMember(chatId) {
+      return signedIn() && request.auth.uid in chatData(chatId).members;
+    }
+
+    match /users/{uid} {
+      // Public profile directory for authenticated QAVLI users.
+      allow read: if signedIn();
+
+      allow create: if isSelf(uid)
+        && request.resource.data.username is string
+        && request.resource.data.displayName is string
+        && request.resource.data.username.matches('^[a-z0-9_]{3,20}$');
+
+      allow update: if isSelf(uid)
+        && request.resource.data.username == resource.data.username
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'avatarUrl', 'online', 'lastSeen'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 40;
+
+      allow delete: if false;
+    }
+
+    match /usernames/{username} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && username.matches('^[a-z0-9_]{3,20}$');
+      allow update, delete: if false;
+    }
+
+    match /chats/{chatId} {
+      allow get: if signedIn()
+        && (request.auth.uid in resource.data.members || resource.data.isGroup == true);
+
+      // The home screen query uses array-contains(current uid).
+      allow list: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.members is list
+        && request.auth.uid in request.resource.data.members
+        && request.resource.data.isGroup is bool;
+
+      allow update: if signedIn() && (
+        // Normal activity updates after a message is sent.
+        (request.auth.uid in resource.data.members
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastActivityAt', 'lastMessage']))
+        ||
+        // Only the group creator can manage members.
+        (request.auth.uid in resource.data.members
+          && resource.data.isGroup == true
+          && resource.data.createdBy == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['members']))
+        ||
+        // A non-member may join a group only by adding their own uid.
+        (resource.data.isGroup == true
+          && !(request.auth.uid in resource.data.members)
+          && request.auth.uid in request.resource.data.members
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['members'])
+          && request.resource.data.members.size() == resource.data.members.size() + 1)
+      );
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isChatMember(chatId);
+
+        allow create: if isChatMember(chatId)
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.get('text', '') is string
+          && request.resource.data.get('text', '').size() <= 2000;
+
+        allow update: if isChatMember(chatId) && (
+          // A sender can edit or soft-delete only their own message.
+          (resource.data.senderId == request.auth.uid
+            && request.resource.data.senderId == resource.data.senderId
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['text', 'edited', 'deleted']))
+          ||
+          // Any chat member can update reaction/read receipt metadata.
+          (resource.data.senderId != request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['reaction', 'readBy']))
+        );
+
+        allow delete: if false;
+      }
+
+      match /typing/{uid} {
+        allow read: if isChatMember(chatId);
+        allow create, update: if isChatMember(chatId)
+          && request.auth.uid == uid
+          && request.resource.data.until is timestamp;
+        allow delete: if isChatMember(chatId) && request.auth.uid == uid;
+      }
+    }
+  }
+}
