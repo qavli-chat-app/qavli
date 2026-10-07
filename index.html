@@ -153,21 +153,21 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 </div>
 
 <div id="vhome" class="v">
-  <div class="bar"><h2>QAVLI</h2><button id="bgrp">New group</button><button id="out">Sign out</button></div>
+  <div class="bar"><h2>QAVLI</h2><button id="profileBtn">Profile</button><button id="bgrp">New group</button><button id="out">Sign out</button></div>
   <div class="tools"><input id="q" placeholder="Find a person by username" autocapitalize="none"></div>
   <div class="scroll"><div id="res"></div><div id="list"></div></div>
 </div>
 
 <div id="vchat" class="v">
-  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="inv" hidden>Invite link</button></div>
-  <div id="msgs"></div>
+  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="searchChat">Search</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
+  <div id="msgs"></div><div id="replybar" hidden><span id="replyText"></span><button id="cancelReply" type="button">Cancel</button></div>
   <form id="f"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
@@ -177,7 +177,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
 const $ = s => document.querySelector(s);
-let me = null, prof = null, cur = null, unC = null, unL = null, names = {};
+let me = null, prof = null, cur = null, unC = null, unL = null, names = {}, currentMessages = [], replyTo = null;
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
 function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
@@ -309,27 +309,30 @@ function openChat(c, title) {
   }, () => { $('#msgs').textContent = ''; $('#msgs').append(el('p', 'empty', 'Could not load messages. Go back and try again.')); });
 }
 function renderMsgs(ms) {
-  const M = $('#msgs'), near = M.scrollHeight - M.scrollTop - M.clientHeight < 150; M.textContent = '';
-  ms.forEach(m => {
-    const mine = m.senderId === me.uid, d = el('div', 'msg' + (mine ? ' me' : ''));
-    if (cur.isGroup && !mine) d.append(el('b', 'who', names[m.senderId] || 'Member'));
-    const t = el('span');
-    m.text.split(/(https?:\/\/[^\s]+)/g).forEach(p => {
-      if (/^https?:\/\//.test(p)) { const a = el('a', '', p); a.href = p; a.target = '_blank'; a.rel = 'noopener noreferrer'; t.append(a); }
-      else t.append(document.createTextNode(p));
-    });
-    const when = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    d.append(t, el('i', 'time', m.pending ? 'Sending...' : when));
+  currentMessages=ms; const filter=($('#chatQuery')?.value||'').trim().toLowerCase();
+  const M=$('#msgs'), near=M.scrollHeight-M.scrollTop-M.clientHeight<150; M.textContent='';
+  ms.filter(m=>!filter||(m.text||'').toLowerCase().includes(filter)).forEach(m=>{
+    const mine=m.senderId===me.uid,d=el('div','msg'+(mine?' me':'')); d.dataset.id=m.id;
+    if(cur.isGroup&&!mine)d.append(el('b','who',names[m.senderId]||'Member'));
+    if(m.replyTo)d.append(el('div','reply-preview','↩ '+(m.replyTo.text||'Message').slice(0,90)));
+    d.append(el('span','',m.deleted?'This message was deleted.':(m.text||'')));
+    d.append(el('i','time',(m.pending?'Sending...':(m.createdAt&&m.createdAt.toDate?m.createdAt.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''))+(m.edited?' · edited':'')));
+    if(m.reaction)d.append(el('span','reaction',m.reaction));
+    if(!m.deleted){const a=el('div','msg-tools'); const r=el('button','','↩');r.onclick=()=>setReply(m);const x=el('button','','☺');x.onclick=()=>reactMsg(m);const cp=el('button','','Copy');cp.onclick=()=>navigator.clipboard?.writeText(m.text||'');a.append(r,x,cp);if(mine){const ed=el('button','','Edit');ed.onclick=()=>editMsg(m);const dl=el('button','','Delete');dl.onclick=()=>removeMsg(m);a.append(ed,dl)}d.append(a)}
     M.append(d);
-  });
-  if (near) M.scrollTop = M.scrollHeight;
+  }); if(near)M.scrollTop=M.scrollHeight;
 }
+function setReply(m){replyTo={id:m.id,text:m.text||''};$('#replyText').textContent='Replying: '+(m.text||'').slice(0,80);$('#replybar').hidden=false;$('#in').focus()}
+async function editMsg(m){const v=prompt('Edit message',m.text||'');if(v===null||!v.trim())return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{text:v.trim(),edited:true})}catch(e){alert('Could not edit ('+e.code+')')}}
+async function removeMsg(m){if(!confirm('Delete this message for everyone?'))return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{text:'',deleted:true})}catch(e){alert('Could not delete ('+e.code+')')}}
+async function reactMsg(m){const v=prompt('Reaction: ❤️  👍  😂  😮  😢  🔥','❤️');if(!v)return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{reaction:v.slice(0,4)})}catch(e){alert('Could not react ('+e.code+')')}}
 $('#f').onsubmit = e => {
   e.preventDefault();
   const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
-  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp() })
+  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null })
     .catch(() => alert('Message not sent. Check your internet and try again.'));
 };
+$('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=()=>{const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim()}).catch(e=>alert('Could not update ('+e.code+')'))};
 $('#back').onclick = () => { if (unC) { unC(); unC = null; } cur = null; show('vhome'); };
 $('#inv').onclick = () => {
   const l = location.origin + location.pathname + '?join=' + cur.id;
