@@ -181,8 +181,8 @@ let me = null, prof = null, cur = null, unC = null, unL = null, names = {}, curr
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
 function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
-function row(title, sub, onclick) {
-  const b = el('button', 'row'); b.append(el('div', 'av', (title || '?')[0].toUpperCase()));
+function row(title, sub, onclick, avatarUrl='') {
+  const b = el('button', 'row'); const av=el('div','av',avatarUrl?'':''); if(avatarUrl){av.textContent='';av.style.backgroundImage=`url(${avatarUrl})`;av.style.backgroundSize='cover';av.style.backgroundPosition='center';} else av.textContent=(title||'?')[0].toUpperCase(); b.append(av);
   const t = el('div'); t.append(el('b', '', title)); if (sub) t.append(el('small', '', sub));
   b.append(t); b.onclick = onclick; return b;
 }
@@ -256,7 +256,7 @@ async function renderList(docs) {
   if (!items.length) { L.append(el('p', 'empty', 'No chats yet. Search a username above or create a group.')); return; }
   items.forEach(c => {
     const t = c.isGroup ? c.name : (names[c.members.find(m => m !== me.uid)] || 'Chat');
-    L.append(row(t, c.isGroup ? 'Group, ' + c.members.length + ' members' : '', () => openChat(c, t)));
+    L.append(row(t, c.isGroup ? 'Group, ' + c.members.length + ' members' : '', () => openChat(c, t), c.isGroup ? '' : (c.memberProfiles?.[c.members.find(m=>m!==me.uid)]?.avatarUrl||'')));
   });
 }
 
@@ -268,13 +268,13 @@ async function search() {
   try {
     const s = await getDocs(query(collection(db, 'users'), where('username', '>=', q), where('username', '<=', q + '\uf8ff'), limit(10)));
     let n = 0;
-    s.forEach(d => { if (d.id === me.uid) return; n++; const p = d.data(); R.append(row(p.displayName, '@' + p.username, () => startDM(d.id, p.displayName))); });
+    s.forEach(d => { if (d.id === me.uid) return; n++; const p = d.data(); R.append(row(p.displayName, '@' + p.username, () => startDM(d.id, p.displayName), p.avatarUrl||'')); });
     if (!n) R.append(el('p', 'empty', 'No user found with that username.'));
   } catch (e) { R.append(el('p', 'empty', 'Search failed (' + e.code + ')')); }
 }
 async function startDM(other, title) {
   const m = [me.uid, other].sort(), id = m.join('_'), ref = doc(db, 'chats', id);
-  try { const s = await getDoc(ref); if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp() }); }
+  try { const s = await getDoc(ref); if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp(), lastActivityAt: serverTimestamp() }); }
   catch (e) { return alert('Could not start chat (' + e.code + ')'); }
   $('#q').value = ''; $('#res').textContent = '';
   openChat({ id, isGroup: false, members: m }, title);
@@ -333,7 +333,8 @@ $('#f').onsubmit = e => {
   addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null }).then(()=>{replyTo=null;$('#replybar').hidden=true})
     .catch(() => alert('Message not sent. Check your internet and try again.'));
 };
-$('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=()=>{const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim()}).catch(e=>alert('Could not update ('+e.code+')'))};
+$('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:\n1 = Change display name\n2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim()}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
+$('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;alert('Profile picture updated.')}catch(err){alert('Could not upload picture ('+(err.code||'network')+')')}e.target.value=''};
 $('#back').onclick = () => { if (unC) { unC(); unC = null; } cur = null; show('vhome'); };
 $('#inv').onclick = () => {
   const l = location.origin + location.pathname + '?join=' + cur.id;
