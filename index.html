@@ -53,6 +53,80 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
 form input{margin:0}
 </style>
+
+<style id="qavli-pro-ui">
+/* QAVLI 2.0 — visible premium interface layer */
+:root{
+  --bg:#f5f7fb;--card:#ffffff;--ink:#102f48;--mute:#718096;--line:#e5eaf1;
+  --brand:#173f5f;--accent:#f2a93b;--mine:#eaf5ff;--other:#fff;
+  --soft:#eef3f8;--shadow:0 18px 50px rgba(16,47,72,.10)
+}
+html,body{background:radial-gradient(circle at 20% 0%,rgba(242,169,59,.12),transparent 28%),var(--bg)}
+.v{max-width:1180px;width:100%;margin:auto;background:rgba(245,247,251,.78);backdrop-filter:blur(18px)}
+.v.on{animation:qavliIn .28s ease both}
+@keyframes qavliIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.pad{padding:clamp(28px,7vw,72px) clamp(20px,5vw,64px);align-items:center}
+#vauth,#vsetup{max-width:520px;min-height:100%;background:transparent}
+#vauth>* ,#vsetup>*{max-width:420px;width:100%}
+.logo{width:78px;height:78px;line-height:78px;border-radius:24px 24px 24px 8px;background:linear-gradient(145deg,#f7bd55,#f2a93b);box-shadow:0 14px 32px rgba(242,169,59,.28);font:800 44px/78px Georgia,serif;margin-bottom:20px;transform:rotate(-2deg)}
+h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
+.mute{font-size:15px;color:var(--mute);margin-bottom:26px}
+#vauth input,#vsetup input{height:54px;padding:0 17px;border-radius:16px;background:rgba(255,255,255,.9);border:1px solid #dfe6ee;box-shadow:0 4px 16px rgba(16,47,72,.04)}
+#vauth button,#vsetup button{height:54px;border-radius:16px;font-weight:750;box-shadow:0 8px 22px rgba(16,47,72,.12);transition:transform .18s,box-shadow .18s}
+#vauth button:hover,#vsetup button:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(16,47,72,.16)}
+#vauth button.sec{background:#fff}
+.err{font-size:13px}
+.bar{min-height:76px;padding:12px clamp(16px,3vw,28px);background:linear-gradient(135deg,#173f5f,#102f48);box-shadow:0 10px 28px rgba(16,47,72,.16);gap:12px}
+.bar h2{font:800 22px/1 Georgia,serif;letter-spacing:.2px}
+.bar h2:after{content:"  •  online";font:600 11px system-ui;color:#8de0b3;vertical-align:middle}
+.bar button{border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:10px 13px;background:rgba(255,255,255,.10);transition:.18s}
+.bar button:hover{background:rgba(255,255,255,.18);transform:translateY(-1px)}
+#vhome{background:linear-gradient(180deg,#f7f9fc 0,#f2f5f9 100%)}
+.tools{padding:18px 18px 10px;background:rgba(255,255,255,.72);border-bottom:1px solid var(--line)}
+.tools:before{content:"Messages";display:block;font:800 26px/1 Georgia,serif;color:var(--ink);margin:0 0 14px 2px}
+.tools input{height:50px;border-radius:15px;padding-left:44px;background:#fff;box-shadow:0 7px 22px rgba(16,47,72,.06)}
+.scroll{padding:10px 12px 28px}
+.row{min-height:70px;margin:5px 0;padding:12px 13px;border:1px solid transparent;border-radius:18px;background:rgba(255,255,255,.74);box-shadow:0 4px 14px rgba(16,47,72,.035);transition:transform .18s,box-shadow .18s,border-color .18s,background .18s}
+.row:hover{background:#fff;border-color:#e1e8ef;transform:translateY(-1px);box-shadow:0 10px 24px rgba(16,47,72,.08)}
+.row b{font-size:15px}
+.row small{display:block;margin-top:3px}
+.av{width:48px;height:48px;border:0;border-radius:16px;background:linear-gradient(145deg,#173f5f,#245f85);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);font:800 18px/48px Georgia,serif}
+.empty{padding:54px 24px;background:rgba(255,255,255,.5);border:1px dashed #d8e0e9;border-radius:20px;margin:14px 4px}
+#vchat{background:#eef3f7}
+#vchat .bar{position:relative;z-index:2}
+#ct{letter-spacing:.1px}
+#msgs{padding:22px clamp(12px,4vw,42px);gap:9px;background:
+ radial-gradient(circle at 15% 15%,rgba(242,169,59,.08),transparent 24%),
+ radial-gradient(circle at 90% 80%,rgba(23,63,95,.06),transparent 26%),#eef3f7}
+.msg{max-width:min(72%,560px);padding:10px 13px 7px;border:1px solid rgba(16,47,72,.07);border-radius:18px 18px 18px 5px;box-shadow:0 4px 13px rgba(16,47,72,.06);background:rgba(255,255,255,.94)}
+.msg.me{background:#dceefa;border-radius:18px 18px 5px 18px;border-color:#c7e1f2}
+.who{font-size:11px;font-weight:800;color:#39708f;margin-bottom:3px}
+.time{margin-top:4px;font-size:10px;opacity:.7}
+#f{padding:12px clamp(12px,3vw,28px) calc(12px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);backdrop-filter:blur(14px);gap:9px}
+#f input{height:50px;border-radius:16px;padding:0 16px;background:#f4f7fa;border:1px solid #e1e7ed}
+#f button{min-width:78px;height:50px;border-radius:15px;background:var(--accent);box-shadow:0 7px 18px rgba(242,169,59,.25);font-weight:800}
+@media(min-width:800px){
+  #vhome,#vchat{border-left:1px solid #e2e8ef;border-right:1px solid #e2e8ef;box-shadow:var(--shadow)}
+  #vhome{width:760px;max-width:calc(100% - 40px);border-radius:24px;min-height:calc(100% - 40px);margin:20px auto}
+  #vchat{width:1000px;max-width:calc(100% - 40px);min-height:calc(100% - 40px);margin:20px auto;border-radius:24px;overflow:hidden}
+}
+@media(max-width:600px){
+  .bar{min-height:68px}.bar button{padding:9px 10px;font-size:13px}.bar h2{font-size:20px}
+  #vhome .bar button:first-of-type{display:none}
+  .msg{max-width:86%}
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#09131f;--card:#111f2e;--ink:#edf4fa;--mute:#91a4b7;--line:#263747;--other:#152638;--mine:#173e58}
+  html,body{background:#09131f}
+  .v,#vhome{background:#0d1824}
+  #vauth input,#vsetup input,.tools input{background:#122131;color:#edf4fa;border-color:#294052}
+  .tools{background:rgba(13,24,36,.88);border-color:#263747}
+  .row{background:rgba(18,33,49,.82)}.row:hover{background:#15283a}
+  #msgs{background:#0b1722}.msg{background:#132535;border-color:#223849}.msg.me{background:#16405a}
+  #f{background:rgba(13,24,36,.94)}#f input{background:#122131;color:#edf4fa;border-color:#294052}
+}
+@media(prefers-reduced-motion:reduce){.v.on,.row,#vauth button,#vsetup button,.bar button{animation:none;transition:none}}
+</style>
 </head>
 <body>
 
