@@ -159,7 +159,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 </div>
 
 <div id="vchat" class="v">
-  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="searchChat">Search</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
+  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="searchChat">Search</button><button id="manageGroup" hidden>Members</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
   <div id="msgs"></div><div id="replybar" hidden><span id="replyText"></span><button id="cancelReply" type="button">Cancel</button></div>
   <form id="f"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
@@ -300,7 +300,7 @@ async function joinLink(id) {
 
 /* ---------- chat ---------- */
 function openChat(c, title) {
-  cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
+  cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
   if (unC) unC();
   unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(50)), async snap => {
     const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
@@ -326,10 +326,11 @@ function setReply(m){replyTo={id:m.id,text:m.text||''};$('#replyText').textConte
 async function editMsg(m){const v=prompt('Edit message',m.text||'');if(v===null||!v.trim())return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{text:v.trim(),edited:true})}catch(e){alert('Could not edit ('+e.code+')')}}
 async function removeMsg(m){if(!confirm('Delete this message for everyone?'))return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{text:'',deleted:true})}catch(e){alert('Could not delete ('+e.code+')')}}
 async function reactMsg(m){const v=prompt('Reaction: ❤️  👍  😂  😮  😢  🔥','❤️');if(!v)return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{reaction:v.slice(0,4)})}catch(e){alert('Could not react ('+e.code+')')}}
+$('#manageGroup').onclick=async()=>{if(!cur?.isGroup)return;const u=(prompt('Enter username to add')||'').trim().toLowerCase();if(!/^[a-z0-9_]{3,20}$/.test(u))return;try{const s=await getDocs(query(collection(db,'users'),where('username','==',u),limit(1)));if(s.empty)return alert('User not found.');const uid=s.docs[0].id;if(cur.members.includes(uid))return alert('Already a member.');await updateDoc(doc(db,'chats',cur.id),{members:arrayUnion(uid)});cur.members.push(uid);alert('Member added.');}catch(e){alert('Could not add member ('+e.code+')')}};
 $('#f').onsubmit = e => {
   e.preventDefault();
   const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
-  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null })
+  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null }).then(()=>{replyTo=null;$('#replybar').hidden=true})
     .catch(() => alert('Message not sent. Check your internet and try again.'));
 };
 $('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=()=>{const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim()}).catch(e=>alert('Could not update ('+e.code+')'))};
