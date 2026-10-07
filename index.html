@@ -337,7 +337,7 @@ $('#inv').onclick = () => {
   else prompt('Copy invite link', l);
 };
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();for(const r of regs){if(new URL(r.scope).pathname.includes('/qavli/'))await r.unregister()}for(const k of await caches.keys()){if(k.startsWith('qavli-shell-'))await caches.delete(k)}await navigator.serviceWorker.register('sw.js?v=3')}catch(e){}})}</script>
 <script src="js/qavli-core.js"></script>
 </body>
   </html>
