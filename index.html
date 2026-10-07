@@ -78,7 +78,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 .err{font-size:13px}
 .bar{min-height:76px;padding:12px clamp(16px,3vw,28px);background:linear-gradient(135deg,#173f5f,#102f48);box-shadow:0 10px 28px rgba(16,47,72,.16);gap:12px}
 .brand-mini{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#f7bd55,#f2a93b);color:#173f5f;font:900 22px Georgia,serif;box-shadow:0 6px 16px rgba(242,169,59,.22)}.brand-mini h2{margin:0;font:800 22px/1 Georgia,serif;letter-spacing:.2px}.brand-mini small{display:block;margin-top:4px;font:500 10px/1 system-ui;color:rgba(255,255,255,.62)}.bar-actions{display:flex;gap:7px;align-items:center}.bar-actions button{font-size:12px}
-.bar h2:after{content:"  •  online";font:600 11px system-ui;color:#8de0b3;vertical-align:middle}
+
 .bar button{border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:10px 13px;background:rgba(255,255,255,.10);transition:.18s}
 .bar button:hover{background:rgba(255,255,255,.18);transform:translateY(-1px)}
 #vhome{background:linear-gradient(180deg,#f7f9fc 0,#f2f5f9 100%)}
@@ -178,7 +178,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
 const $ = s => document.querySelector(s);
-let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, names = {}, currentMessages = [], replyTo = null, typingTimer = null;
+let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, unPresence = null, names = {}, currentMessages = [], replyTo = null, typingTimer = null;
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
 function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
@@ -303,7 +303,8 @@ async function joinLink(id) {
 
 /* ---------- chat ---------- */
 function openChat(c, title) {
-  cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
+  cur = c; $('#ct').textContent = title; $('#presence').textContent = ''; $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
+  const other=c.members?.find(x=>x!==me.uid); if(!c.isGroup&&other){if(unPresence)unPresence();unPresence=onSnapshot(doc(db,'users',other),s=>{const p=s.exists()?s.data():{};$('#presence').textContent=p.online?'● online':(p.lastSeen?.toDate?'last seen '+p.lastSeen.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'offline');},()=>{$('#presence').textContent=''});}
   if (unC) unC(); if(unTyping)unTyping(); listenTyping(c);
   unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(100)), async snap => {
     const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
@@ -342,7 +343,7 @@ $('#in').addEventListener('input',()=>setTyping(!!$('#in').value.trim()));
 $('#filePick').onchange=async e=>{const file=e.target.files[0];if(!file||!cur)return;if(file.size>15*1024*1024)return alert('File must be 15 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'chatFiles/'+cur.id+'/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);const data={senderId:me.uid,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()},fileUrl:url,fileName:file.name,fileType:file.type};if(file.type.startsWith('image/'))data.imageUrl=url;await addDoc(collection(db,'chats',cur.id,'messages'),data);await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:'📎 '+file.name});e.target.value=''}catch(err){alert('Upload failed ('+(err.code||'network')+')')}};
 $('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:\n1 = Change display name\n2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim()}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
 $('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;alert('Profile picture updated.')}catch(err){alert('Could not upload picture ('+(err.code||'network')+')')}e.target.value=''};
-$('#back').onclick = () => { if (unC) { unC(); unC = null; } if(unTyping){unTyping();unTyping=null} setTyping(false); cur = null; show('vhome'); };
+$('#back').onclick = () => { if (unC) { unC(); unC = null; } if(unTyping){unTyping();unTyping=null} if(unPresence){unPresence();unPresence=null} setTyping(false); cur = null; show('vhome'); };
 $('#inv').onclick = () => {
   const l = location.origin + location.pathname + '?join=' + cur.id;
   if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
