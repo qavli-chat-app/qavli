@@ -77,13 +77,13 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 #vauth button.sec{background:#fff}
 .err{font-size:13px}
 .bar{min-height:76px;padding:12px clamp(16px,3vw,28px);background:linear-gradient(135deg,#173f5f,#102f48);box-shadow:0 10px 28px rgba(16,47,72,.16);gap:12px}
-.bar h2{font:800 22px/1 Georgia,serif;letter-spacing:.2px}
+.brand-mini{display:flex;align-items:center;gap:10px;min-width:0;flex:1}.brand-mark{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#f7bd55,#f2a93b);color:#173f5f;font:900 22px Georgia,serif;box-shadow:0 6px 16px rgba(242,169,59,.22)}.brand-mini h2{margin:0;font:800 22px/1 Georgia,serif;letter-spacing:.2px}.brand-mini small{display:block;margin-top:4px;font:500 10px/1 system-ui;color:rgba(255,255,255,.62)}.bar-actions{display:flex;gap:7px;align-items:center}.bar-actions button{font-size:12px}
 .bar h2:after{content:"  •  online";font:600 11px system-ui;color:#8de0b3;vertical-align:middle}
 .bar button{border:1px solid rgba(255,255,255,.13);border-radius:12px;padding:10px 13px;background:rgba(255,255,255,.10);transition:.18s}
 .bar button:hover{background:rgba(255,255,255,.18);transform:translateY(-1px)}
 #vhome{background:linear-gradient(180deg,#f7f9fc 0,#f2f5f9 100%)}
 .tools{padding:18px 18px 10px;background:rgba(255,255,255,.72);border-bottom:1px solid var(--line)}
-.tools:before{content:"Messages";display:block;font:800 26px/1 Georgia,serif;color:var(--ink);margin:0 0 14px 2px}
+.tools:before{display:none}.section-title{display:flex;align-items:end;justify-content:space-between;margin:0 2px 13px}.section-title span{font:800 28px/1 Georgia,serif;color:var(--ink)}.section-title small{font-size:12px;color:var(--mute)}.search-wrap{position:relative}.search-wrap>span{position:absolute;left:15px;top:11px;font-size:25px;color:var(--mute);z-index:1}.search-wrap input{padding-left:44px}
 .tools input{height:50px;border-radius:15px;padding-left:44px;background:#fff;box-shadow:0 7px 22px rgba(16,47,72,.06)}
 .scroll{padding:10px 12px 28px}
 .row{min-height:70px;margin:5px 0;padding:12px 13px;border:1px solid transparent;border-radius:18px;background:rgba(255,255,255,.74);box-shadow:0 4px 14px rgba(16,47,72,.035);transition:transform .18s,box-shadow .18s,border-color .18s,background .18s}
@@ -112,7 +112,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 }
 @media(max-width:600px){
   .bar{min-height:68px}.bar button{padding:9px 10px;font-size:13px}.bar h2{font-size:20px}
-  #vhome .bar button:first-of-type{display:none}
+  #vhome .bar-actions button{font-size:12px}#vhome .bar-actions button:first-child{display:inline-flex}
   .msg{max-width:86%}
 }
 @media(prefers-color-scheme:dark){
@@ -133,7 +133,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 <div id="vauth" class="v on pad">
   <div class="logo">Q</div>
   <h1>QAVLI</h1>
-  <p class="mute">Sign in to start chatting.</p>
+  <p class="mute">Private, simple and built for everyday conversations.</p>
   <input id="em" type="email" placeholder="Email" autocomplete="email">
   <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password">
   <div class="err" id="aerr" role="alert"></div>
@@ -153,20 +153,20 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 </div>
 
 <div id="vhome" class="v">
-  <div class="bar"><h2>QAVLI</h2><button id="profileBtn">Profile</button><button id="bgrp">New group</button><button id="out">Sign out</button></div>
-  <div class="tools"><input id="q" placeholder="Find a person by username" autocapitalize="none"></div>
+  <div class="bar"><div class="brand-mini"><span class="brand-mark">Q</span><div><h2>QAVLI</h2><small>Private messaging</small></div></div><div class="bar-actions"><button id="profileBtn">Profile</button><button id="bgrp">New group</button><button id="out">Sign out</button></div></div>
+  <div class="tools"><div class="section-title"><span>Messages</span><small>Stay connected</small></div><div class="search-wrap"><span>⌕</span><input id="q" placeholder="Search people by username" autocapitalize="none"></div></div>
   <div class="scroll"><div id="res"></div><div id="list"></div></div>
 </div>
 
 <div id="vchat" class="v">
-  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><span id="presence" style="font-size:11px;opacity:.85"></span><button id="searchChat">Search</button><button id="manageGroup" hidden>Members</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
+  <div class="bar"><button id="back" aria-label="Back">Back</button><div style="min-width:0;flex:1"><h2 id="ct"></h2><span id="presence" style="font-size:11px;opacity:.85"></span></div><button id="searchChat">Search</button><button id="manageGroup" hidden>Members</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
   <div id="typing" style="display:none;padding:4px 18px;font-size:12px;color:#718096">typing…</div><div id="msgs"></div><div id="replybar" hidden><span id="replyText"></span><button id="cancelReply" type="button">Cancel</button></div>
   <form id="f"><label for="filePick" style="display:grid;place-items:center;width:50px;height:50px;border-radius:15px;background:#eef3f8;cursor:pointer;font-size:20px" title="Attach file">📎</label><input id="filePick" type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt,.zip"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
@@ -176,7 +176,7 @@ const firebaseConfig = {
   projectId: "qavli-37983",
   appId: "1:168938701514:web:783d81a63d8e4423e56a33"
 };
-const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app);
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
 const $ = s => document.querySelector(s);
 let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, names = {}, currentMessages = [], replyTo = null, typingTimer = null;
 
