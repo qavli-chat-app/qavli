@@ -115,6 +115,22 @@ form .ib{background:transparent;color:var(--ink);padding:8px;font-size:20px;opac
 </style>
 </head>
 <body>
+<script>
+(function () {
+  var shown = false;
+  function fail(msg) {
+    if (shown || window.__qv_ready) return; shown = true;
+    var s = document.getElementById('vsplash'); if (!s) return;
+    var p = document.createElement('p'); p.style.cssText = 'color:#d62839;font-size:14px;margin:16px 0 0;word-break:break-word;max-width:320px';
+    p.textContent = 'QAVLI could not start. ' + msg;
+    var b = document.createElement('button'); b.textContent = 'Try again'; b.style.marginTop = '12px'; b.onclick = function () { location.reload(); };
+    s.appendChild(p); s.appendChild(b);
+  }
+  window.addEventListener('error', function (e) { fail((e.message || 'Error') + (e.lineno ? ' (line ' + e.lineno + ')' : '')); });
+  window.addEventListener('unhandledrejection', function (e) { fail(String((e.reason && e.reason.message) || e.reason)); });
+  setTimeout(function () { fail('It is taking too long. Check your internet and try again.'); }, 12000);
+})();
+</script>
 
 <div id="vsplash" class="v on pad" style="align-items:center;text-align:center"><div class="logo">Q</div><h1>QAVLI</h1></div>
 
@@ -211,7 +227,7 @@ const EMOJI = ['\u{1F44D}', '\u2764\uFE0F', '\u{1F602}', '\u{1F62E}', '\u{1F622}
 let me = null, prof = null, cur = null, unC = null, unL = null, names = lsGet('qv_names', {}), chats = {}, lastMs = [], replyTo = null, lastReadAt = 0, unP = null, otherSeen = null, msgFilter = '', lastTyping = 0, msgLimit = 30, more = false, chatFilter = '';
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
-function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
+function show(id) { if (id !== 'vsplash') window.__qv_ready = true; document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
 function row(title, sub, onclick, dot) {
   const b = el('button', 'row'); b.append(el('div', 'av', (title || '?')[0].toUpperCase()));
   const t = el('div'); t.append(el('b', '', title)); if (sub) t.append(el('small', '', sub));
@@ -273,20 +289,4 @@ $('#bsave').onclick = async () => {
   if (!/^[a-z0-9_]{3,20}$/.test(username) || !displayName) { $('#serr').textContent = 'Username: 3-20 letters, numbers or _. Display name is required.'; return; }
   try {
     await runTransaction(db, async t => {
-      const un = doc(db, 'usernames', username);
-      if ((await t.get(un)).exists()) throw new Error('taken');
-      t.set(un, { uid: me.uid });
-      t.set(doc(db, 'users', me.uid), { username, displayName });
-    });
-    prof = { username, displayName }; names[me.uid] = displayName; home();
-  } catch (e) { $('#serr').textContent = e.message === 'taken' ? 'That username is taken. Try another.' : 'Could not save (' + (e.code || e.message) + ')'; }
-};
-
-/* ---------- home ---------- */
-function home() {
-  show('vhome'); renderSettings(); setTab('chats'); beat();
-  const L0 = $('#list'); L0.textContent = ''; for (let i = 0; i < 4; i++) L0.append(el('div', 'sk'));
-  if (unL) unL();
-  unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => {
-    chats = {}; snap.docs.forEach(d => { chats[d.id] = { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }; });
-    if (cur && chats[cur.id]) { cur = { ...cur, ...chats[cur.id] }; if (lastMs.length) renderMsgs(lastMs); updat
+      const un =
