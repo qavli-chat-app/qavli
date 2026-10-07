@@ -283,8 +283,10 @@ async function search() {
 }
 async function startDM(other, title) {
   const m = [me.uid, other].sort(), id = m.join('_'), ref = doc(db, 'chats', id);
-  try { const s = await getDoc(ref); if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp(), lastActivityAt: serverTimestamp() }); }
-  catch (e) { return alert('Could not start chat (' + e.code + ')'); }
+  try {
+    const s = await getDoc(ref);
+    if (!s.exists()) await setDoc(ref, { isGroup: false, members: m, createdAt: serverTimestamp(), lastActivityAt: serverTimestamp() });
+  } catch (e) { return alert('Could not start chat: ' + (e.code || e.message)); }
   $('#q').value = ''; $('#res').textContent = '';
   openChat({ id, isGroup: false, members: m }, title);
 }
@@ -351,6 +353,7 @@ $('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#sea
 $('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;profiles[me.uid]=prof;alert('Profile picture updated.')}catch(err){alert('Could not upload picture ('+(err.code||'network')+')')}e.target.value=''};
 $('#back').onclick = () => { if (unC) { unC(); unC = null; } if(unTyping){unTyping();unTyping=null} if(unPresence){unPresence();unPresence=null} setTyping(false); cur = null; show('vhome'); };
 $('#inv').onclick = () => {
+  if(!cur?.isGroup){ return alert('Invite links are available for groups.'); }
   const l = location.origin + location.pathname + '?join=' + cur.id;
   if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
   else prompt('Copy invite link', l);
