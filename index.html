@@ -13,8 +13,8 @@
 <meta name="theme-color" content="#14213d">
 <title>QAVLI</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
 <style>
 :root{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#667089;--line:#dfe4ef;--brand:#14213d;--accent:#fca311;--mine:#fde3b0;--other:#fff}
 @media(prefers-color-scheme:dark){:root{--bg:#0c1426;--card:#141f38;--ink:#edf1fa;--mute:#93a0bd;--line:#26334f;--brand:#0c1426;--mine:#6b4a0c;--other:#1b2845}}
@@ -350,7 +350,7 @@ $('#inv').onclick = () => {
   else prompt('Copy invite link', l);
 };
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();for(const r of regs){if(new URL(r.scope).pathname.includes('/qavli/'))await r.unregister()}for(const k of await caches.keys()){if(k.startsWith('qavli-shell-'))await caches.delete(k)}await navigator.serviceWorker.register('sw.js?v=3')}catch(e){}})}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();for(const r of regs){if(new URL(r.scope).pathname.includes('/qavli/'))await r.unregister()}for(const k of await caches.keys()){if(k.startsWith('qavli-shell-'))await caches.delete(k)}await navigator.serviceWorker.register('sw.js?v=4')}catch(e){}})}</script>
 <script src="js/qavli-core.js"></script>
 </body>
   </html>
