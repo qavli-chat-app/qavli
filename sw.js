@@ -1,5 +1,5 @@
 const CACHE='qavli-shell-v4';
-const APP_SHELL=['./','./index.html','./manifest.json','./css/tokens.css','./css/components.css','./css/app.css','./js/qavli-core.js'];
+const APP_SHELL=['./','./index.html','./manifest.json','./css/tokens.css','./css/components.css','./css/app.css','./js/qavli-core.js','./icon.svg'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(APP_SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',event=>{
