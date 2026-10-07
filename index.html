@@ -304,7 +304,7 @@ async function joinLink(id) {
 /* ---------- chat ---------- */
 function openChat(c, title) {
   cur = c; $('#ct').textContent = title; $('#presence').textContent = ''; const avatar=$('#chatAvatar'); avatar.textContent=(title||'Q')[0].toUpperCase(); avatar.style.backgroundImage=''; const other=c.members?.find(x=>x!==me.uid); const avatarUrl=!c.isGroup ? (c.memberProfiles?.[other]?.avatarUrl||'') : ''; if(avatarUrl){avatar.textContent='';avatar.style.backgroundImage=`url(${avatarUrl})`} $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
-  const other=c.members?.find(x=>x!==me.uid); if(!c.isGroup&&other){if(unPresence)unPresence();unPresence=onSnapshot(doc(db,'users',other),s=>{const p=s.exists()?s.data():{};$('#presence').textContent=p.online?'● online':(p.lastSeen?.toDate?'last seen '+p.lastSeen.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'offline');},()=>{$('#presence').textContent=''});}
+  if(!c.isGroup&&other){if(unPresence)unPresence();unPresence=onSnapshot(doc(db,'users',other),s=>{const p=s.exists()?s.data():{};$('#presence').textContent=p.online?'● online':(p.lastSeen?.toDate?'last seen '+p.lastSeen.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'offline');},()=>{$('#presence').textContent=''});}
   if (unC) unC(); if(unTyping)unTyping(); listenTyping(c);
   unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(100)), async snap => {
     const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
