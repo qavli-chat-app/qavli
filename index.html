@@ -147,7 +147,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
   <h1>Your profile</h1>
   <p class="mute">Friends find you by username.</p>
   <input id="un" placeholder="Username (a-z, 0-9, _)" maxlength="20" autocapitalize="none">
-  <input id="dn" placeholder="Display name" maxlength="40">
+  <input id="dn" placeholder="Display name" maxlength="40"><input id="avatarFile" type="file" accept="image/*" hidden>
   <div class="err" id="serr" role="alert"></div>
   <button id="bsave">Save profile</button>
 </div>
@@ -159,15 +159,16 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 </div>
 
 <div id="vchat" class="v">
-  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><button id="searchChat">Search</button><button id="manageGroup" hidden>Members</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
-  <div id="msgs"></div><div id="replybar" hidden><span id="replyText"></span><button id="cancelReply" type="button">Cancel</button></div>
-  <form id="f"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
+  <div class="bar"><button id="back" aria-label="Back">Back</button><h2 id="ct"></h2><span id="presence" style="font-size:11px;opacity:.85"></span><button id="searchChat">Search</button><button id="manageGroup" hidden>Members</button><button id="inv" hidden>Invite</button></div><div id="chatSearch" hidden><input id="chatQuery" placeholder="Search messages"></div>
+  <div id="typing" style="display:none;padding:4px 18px;font-size:12px;color:#718096">typing…</div><div id="msgs"></div><div id="replybar" hidden><span id="replyText"></span><button id="cancelReply" type="button">Cancel</button></div>
+  <form id="f"><label for="filePick" style="display:grid;place-items:center;width:50px;height:50px;border-radius:15px;background:#eef3f8;cursor:pointer;font-size:20px" title="Attach file">📎</label><input id="filePick" type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt,.zip"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
@@ -175,9 +176,9 @@ const firebaseConfig = {
   projectId: "qavli-37983",
   appId: "1:168938701514:web:783d81a63d8e4423e56a33"
 };
-const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app);
 const $ = s => document.querySelector(s);
-let me = null, prof = null, cur = null, unC = null, unL = null, names = {}, currentMessages = [], replyTo = null;
+let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, names = {}, currentMessages = [], replyTo = null, typingTimer = null;
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
 function show(id) { document.querySelectorAll('.v').forEach(v => v.classList.toggle('on', v.id === id)); }
@@ -241,8 +242,10 @@ $('#bsave').onclick = async () => {
 };
 
 /* ---------- home ---------- */
+async function setPresence(state='online'){try{await setDoc(doc(db,'users',me.uid),{online:state==='online',lastSeen:serverTimestamp()},{merge:true})}catch(e){}}
+function startPresence(){setPresence('online');const pulse=setInterval(()=>setPresence('online'),60000);window.addEventListener('beforeunload',()=>{clearInterval(pulse);setPresence('offline')},{once:true})}
 function home() {
-  show('vhome');
+  show('vhome'); startPresence();
   if (unL) unL();
   unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => renderList(snap.docs),
     () => { $('#list').textContent = 'Could not load chats. Check your internet.'; });
@@ -250,7 +253,7 @@ function home() {
   if (j) { history.replaceState(null, '', location.pathname); joinLink(j); }
 }
 async function renderList(docs) {
-  const items = docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.createdAt && b.createdAt.seconds) || 9e12) - ((a.createdAt && a.createdAt.seconds) || 9e12));
+  const items = docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.lastActivityAt && b.lastActivityAt.seconds) || (b.createdAt && b.createdAt.seconds) || 0) - ((a.lastActivityAt && a.lastActivityAt.seconds) || (a.createdAt && a.createdAt.seconds) || 0));
   await ensureNames(items.filter(c => !c.isGroup).map(c => c.members.find(m => m !== me.uid)));
   const L = $('#list'); L.textContent = '';
   if (!items.length) { L.append(el('p', 'empty', 'No chats yet. Search a username above or create a group.')); return; }
@@ -301,13 +304,15 @@ async function joinLink(id) {
 /* ---------- chat ---------- */
 function openChat(c, title) {
   cur = c; $('#ct').textContent = title; $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
-  if (unC) unC();
-  unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(50)), async snap => {
+  if (unC) unC(); if(unTyping)unTyping(); listenTyping(c);
+  unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(100)), async snap => {
     const ms = snap.docs.map(d => ({ id: d.id, pending: d.metadata.hasPendingWrites, ...d.data({ serverTimestamps: 'estimate' }) })).reverse();
     await ensureNames(ms.map(m => m.senderId));
-    if (cur && cur.id === c.id) renderMsgs(ms);
+    if (cur && cur.id === c.id) { renderMsgs(ms); ms.filter(m=>m.senderId!==me.uid&&!m.readBy?.[me.uid]).slice(-20).forEach(m=>updateDoc(doc(db,'chats',c.id,'messages',m.id),{['readBy.'+me.uid]:serverTimestamp()}).catch(()=>{})); }
   }, () => { $('#msgs').textContent = ''; $('#msgs').append(el('p', 'empty', 'Could not load messages. Go back and try again.')); });
 }
+function listenTyping(c){unTyping=onSnapshot(query(collection(db,'chats',c.id,'typing')),snap=>{$('#typing').style.display=snap.docs.some(d=>d.id!==me.uid&&d.data().until&&d.data().until.toMillis()>Date.now())?'block':'none'},()=>{$('#typing').style.display='none'})}
+function setTyping(active){if(!cur)return;clearTimeout(typingTimer);if(active){setDoc(doc(db,'chats',cur.id,'typing',me.uid),{until:new Date(Date.now()+3500)}).catch(()=>{});typingTimer=setTimeout(()=>setTyping(false),2500)}else deleteDoc(doc(db,'chats',cur.id,'typing',me.uid)).catch(()=>{})}
 function renderMsgs(ms) {
   currentMessages=ms; const filter=($('#chatQuery')?.value||'').trim().toLowerCase();
   const M=$('#msgs'), near=M.scrollHeight-M.scrollTop-M.clientHeight<150; M.textContent='';
@@ -315,7 +320,7 @@ function renderMsgs(ms) {
     const mine=m.senderId===me.uid,d=el('div','msg'+(mine?' me':'')); d.dataset.id=m.id;
     if(cur.isGroup&&!mine)d.append(el('b','who',names[m.senderId]||'Member'));
     if(m.replyTo)d.append(el('div','reply-preview','↩ '+(m.replyTo.text||'Message').slice(0,90)));
-    d.append(el('span','',m.deleted?'This message was deleted.':(m.text||'')));
+    if(m.imageUrl){const im=document.createElement('img');im.src=m.imageUrl;im.alt=m.fileName||'Shared image';im.style='max-width:100%;max-height:320px;border-radius:12px;display:block;margin:4px 0;cursor:pointer';im.onclick=()=>window.open(m.imageUrl,'_blank');d.append(im)} if(m.fileUrl){const a=document.createElement('a');a.href=m.fileUrl;a.target='_blank';a.rel='noopener';a.textContent='📎 '+(m.fileName||'Download file');d.append(a)} if(m.text)d.append(el('span','',m.deleted?'This message was deleted.':(m.text||'')));
     d.append(el('i','time',(m.pending?'Sending...':(m.createdAt&&m.createdAt.toDate?m.createdAt.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''))+(m.edited?' · edited':'')));
     if(m.reaction)d.append(el('span','reaction',m.reaction));
     if(!m.deleted){const a=el('div','msg-tools'); const r=el('button','','↩');r.onclick=()=>setReply(m);const x=el('button','','☺');x.onclick=()=>reactMsg(m);const cp=el('button','','Copy');cp.onclick=()=>navigator.clipboard?.writeText(m.text||'');a.append(r,x,cp);if(mine){const ed=el('button','','Edit');ed.onclick=()=>editMsg(m);const dl=el('button','','Delete');dl.onclick=()=>removeMsg(m);a.append(ed,dl)}d.append(a)}
@@ -330,12 +335,14 @@ $('#manageGroup').onclick=async()=>{if(!cur?.isGroup)return;const u=(prompt('Ent
 $('#f').onsubmit = e => {
   e.preventDefault();
   const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
-  addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null }).then(()=>{replyTo=null;$('#replybar').hidden=true})
+  setTyping(false); addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), readBy:{[me.uid]:serverTimestamp()}, replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null }).then(()=>updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:text.slice(0,120)})).then(()=>{replyTo=null;$('#replybar').hidden=true})
     .catch(() => alert('Message not sent. Check your internet and try again.'));
 };
+$('#in').addEventListener('input',()=>setTyping(!!$('#in').value.trim()));
+$('#filePick').onchange=async e=>{const file=e.target.files[0];if(!file||!cur)return;if(file.size>15*1024*1024)return alert('File must be 15 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'chatFiles/'+cur.id+'/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);const data={senderId:me.uid,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()},fileUrl:url,fileName:file.name,fileType:file.type};if(file.type.startsWith('image/'))data.imageUrl=url;await addDoc(collection(db,'chats',cur.id,'messages'),data);await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:'📎 '+file.name});e.target.value=''}catch(err){alert('Upload failed ('+(err.code||'network')+')')}};
 $('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:\n1 = Change display name\n2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim()}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
 $('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;alert('Profile picture updated.')}catch(err){alert('Could not upload picture ('+(err.code||'network')+')')}e.target.value=''};
-$('#back').onclick = () => { if (unC) { unC(); unC = null; } cur = null; show('vhome'); };
+$('#back').onclick = () => { if (unC) { unC(); unC = null; } if(unTyping){unTyping();unTyping=null} setTyping(false); cur = null; show('vhome'); };
 $('#inv').onclick = () => {
   const l = location.origin + location.pathname + '?join=' + cur.id;
   if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
