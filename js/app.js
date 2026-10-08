@@ -3,7 +3,7 @@ import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmai
 import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,limit,orderBy,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
-const firebaseConfig={apiKey:"AIzaSyA3DT-yjo96ntatEA6V7K63x9lofg87ESjcA",authDomain:"qavli-37983.firebaseapp.com",projectId:"qavli-37983",storageBucket:"qavli-37983.firebasestorage.app",appId:"1:168938701514:web:783d81a63d8e4423e56a33",messagingSenderId:"168938701514"};
+const firebaseConfig={apiKey:"AIzaSyCpRK0HE1z7iQ00WaBVbABh-RIjkqz38k8",authDomain:"qavli-37983.firebaseapp.com",projectId:"qavli-37983",storageBucket:"qavli-37983.firebasestorage.app",appId:"1:168938701514:web:783d81a63d8e4423e56a33",messagingSenderId:"168938701514"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
 const $=id=>document.getElementById(id);
 const state={user:null,profile:null,chats:[],active:null,messages:[],unsubs:[],search:"",chatSearch:"",reply:null,theme:localStorage.getItem("qavli-theme")||"light"};
