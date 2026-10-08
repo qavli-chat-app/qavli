@@ -27,5 +27,7 @@
     setTimeout(()=>boot.remove(),520);
   };
   window.addEventListener('qavli-auth-ready',finish,{once:true});
+  const observer=new MutationObserver(()=>{const home=document.getElementById('vhome'),setup=document.getElementById('vsetup');if(home?.classList.contains('on')||setup?.classList.contains('on')){observer.disconnect();finish();}});
+  observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   setTimeout(finish,4500);
 })();
