@@ -153,7 +153,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 </div>
 
 <div id="vhome" class="v">
-  <div class="bar"><div class="brand-mini"><span class="brand-mark">Q</span><div><h2>QAVLI</h2><small>Private messaging</small></div></div><div class="bar-actions"><button id="profileBtn">Profile</button><button id="bgrp">New group</button><button id="out">Sign out</button></div></div>
+  <div class="bar"><div class="brand-mini"><span class="brand-mark">Q</span><div><h2>QAVLI</h2><small>Private messaging</small></div></div><div class="bar-actions"><button id="notifyBtn" title="Enable notifications">🔔</button><button id="profileBtn">Profile</button><button id="bgrp">New group</button><button id="out">Sign out</button></div></div>
   <div class="tools"><div class="section-title"><span>Messages</span><small>Stay connected</small></div><div class="search-wrap"><span>⌕</span><input id="q" placeholder="Search people by username" autocapitalize="none"></div></div>
   <div class="scroll"><div id="res"></div><div id="list"></div></div>
 </div>
@@ -169,6 +169,7 @@ import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import {getMessaging,getToken,onMessage,deleteToken} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
@@ -176,7 +177,9 @@ const firebaseConfig = {
   projectId: "qavli-37983",
   appId: "1:168938701514:web:783d81a63d8e4423e56a33"
 };
-const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app), messaging = getMessaging(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
+const FCM_VAPID_KEY = "PASTE_YOUR_FIREBASE_WEB_PUSH_VAPID_PUBLIC_KEY_HERE";
+let fcmUnsub = null;
 const $ = s => document.querySelector(s);
 let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, unPresence = null, names = {}, profiles = {}, currentMessages = [], replyTo = null, typingTimer = null;
 
@@ -246,6 +249,52 @@ $('#bsave').onclick = async () => {
     prof = { username, displayName }; names[me.uid] = displayName; profiles[me.uid] = prof; home();
   } catch (e) { $('#serr').textContent = e.message === 'taken' ? 'That username is taken. Try another.' : 'Could not save (' + (e.code || e.message) + ')'; }
 };
+
+/* ---------- notifications ---------- */
+function notificationSupported(){
+  return "Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
+}
+async function enableNotifications(){
+  if(!notificationSupported()) return alert("Push notifications are not supported by this browser.");
+  if(FCM_VAPID_KEY.startsWith("PASTE_")) return alert("QAVLI notifications are ready, but the Firebase Web Push VAPID public key has not been added yet.");
+  try{
+    const permission = await Notification.requestPermission();
+    if(permission !== "granted") return alert("Notifications are blocked. Allow notifications for QAVLI in your browser settings.");
+    const registration = await navigator.serviceWorker.register("firebase-messaging-sw.js?v=1");
+    const token = await getToken(messaging,{vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:registration});
+    if(!token) return alert("Could not create a notification subscription.");
+    await setDoc(doc(db,"users",me.uid),{fcmTokens:arrayUnion(token)},{merge:true});
+    $("#notifyBtn").textContent="🔔✓";
+    $("#notifyBtn").title="Notifications enabled";
+    return true;
+  }catch(e){
+    console.error("QAVLI notification setup failed",e);
+    alert("Could not enable notifications ("+(e.code||e.message||"unknown error")+")");
+    return false;
+  }
+}
+async function disableNotifications(){
+  try{
+    if(!notificationSupported()) return;
+    const token = await getToken(messaging,{vapidKey:FCM_VAPID_KEY});
+    if(token && me) await updateDoc(doc(db,"users",me.uid),{fcmTokens:[]}).catch(()=>{});
+    await deleteToken(messaging).catch(()=>{});
+    $("#notifyBtn").textContent="🔕";
+  }catch(e){}
+}
+onMessage(messaging,payload=>{
+  const n=payload.notification||{};
+  if(document.visibilityState==="visible"){
+    if("Notification" in window && Notification.permission==="granted"){
+      try{ new Notification(n.title||"QAVLI",{
+        body:n.body||"New message",
+        icon:"icon.svg",
+        tag:payload.data?.chatId||"qavli-message"
+      }); }catch(e){}
+    }
+  }
+});
+$("#notifyBtn").onclick=enableNotifications;
 
 /* ---------- home ---------- */
 async function setPresence(state='online'){try{await setDoc(doc(db,'users',me.uid),{online:state==='online',lastSeen:serverTimestamp()},{merge:true})}catch(e){}}
