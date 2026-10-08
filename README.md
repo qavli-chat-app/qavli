@@ -15,6 +15,10 @@ QAVLI is a mobile-first private messaging web app powered by Firebase and hosted
 - Reply, edit, soft-delete, copy and reactions
 - In-chat message search
 - Responsive premium UI with dark-mode support
+- Password reset flow and persistent authentication
+- Toast-based app feedback and safer attachment validation
+- Deep-link support for shared/in-app chat navigation
+- Persistent PWA service worker with versioned shell caching
 - PWA manifest and service worker
 
 ## Firebase deployment
