@@ -7,6 +7,10 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
     function isChatMember(chatId) {
       return signedIn()
         && firestore.get(
@@ -22,10 +26,6 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
 
       allow delete: if isSelf(uid);
-
-      function isSelf(ownerUid) {
-        return signedIn() && request.auth.uid == ownerUid;
-      }
     }
 
     match /chatFiles/{chatId}/{uid}/{fileName} {
