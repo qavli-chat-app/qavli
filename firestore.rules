@@ -51,8 +51,7 @@ service cloud.firestore {
       allow create: if isSelf(uid)
         && request.resource.data.token is string
         && request.resource.data.token.size() <= 4096
-        && request.resource.data.diff({}).affectedKeys()
-          .hasOnly(['token', 'link', 'updatedAt']);
+        && request.resource.data.keys().hasOnly(['token', 'link', 'updatedAt']);
 
       allow update: if isSelf(uid)
         && request.resource.data.token is string
