@@ -179,7 +179,7 @@ const firebaseConfig = {
   messagingSenderId: "168938701514"
 };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app), messaging = getMessaging(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
-const FCM_VAPID_KEY = "PASTE_YOUR_FIREBASE_WEB_PUSH_VAPID_PUBLIC_KEY_HERE";
+const FCM_VAPID_KEY = "BL24GOGkIoOkKDuD05DoZ8TXLgoGkSbXO8Do4XASYW3CIFvDZwvUA5h8_injvbPoKnjZTOCScc0JVODFeuV7TGE";
 let fcmUnsub = null;
 const $ = s => document.querySelector(s);
 let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, unPresence = null, names = {}, profiles = {}, currentMessages = [], replyTo = null, typingTimer = null;
