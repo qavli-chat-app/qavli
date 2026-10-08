@@ -200,6 +200,8 @@ body.q-dark .msg-tools button{background:rgba(255,255,255,.08)}
   <div id="composerMeta" class="composer-meta"><span id="charCount">0 / 2000</span><span id="connectionState">● Ready</span></div><form id="f"><label for="filePick" style="display:grid;place-items:center;width:50px;height:50px;border-radius:15px;background:#eef3f8;cursor:pointer;font-size:20px" title="Attach file">📎</label><input id="filePick" type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt,.zip"><input id="in" placeholder="Message" maxlength="2000" autocomplete="off"><button>Send</button></form>
 </div>
 
+<script src="js/qavli-config.js"></script>
+<script src="js/qavli-integrations.js"></script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -215,7 +217,9 @@ const firebaseConfig = {
   appId: "1:168938701514:web:783d81a63d8e4423e56a33",
   messagingSenderId: "168938701514"
 };
-const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app), messaging = getMessaging(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
+const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app), messaging = getMessaging(app);
+setPersistence(auth,browserLocalPersistence).catch(()=>{});
+const integrations = window.QAVLIIntegrations || {cloudinaryReady:()=>false,track:()=>{},uploadToCloudinary:async()=>{throw new Error("Media integration unavailable.")}};
 const FCM_VAPID_KEY = "BL24GOGkIoOkKDuD05DoZ8TXLgoGkSbXO8Do4XASYW3CIFvDZwvUA5h8_injvbPoKnjZTOCScc0JVODFeuV7TGE";
 let fcmUnsub = null;
 const $ = s => document.querySelector(s);
@@ -259,7 +263,7 @@ const friendly = c => ({
 async function doAuth(up) {
   const email = $('#em').value.trim(), pw = $('#pw').value; $('#aerr').textContent = '';
   if (!email || pw.length < 6) { $('#aerr').textContent = 'Enter an email and a password of 6+ characters.'; return; }
-  try { up ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); }
+  try { up ? await createUserWithEmailAndPassword(auth, email, pw) : await signInWithEmailAndPassword(auth, email, pw); integrations.track(up?'account_created':'sign_in'); }
   catch (e) { $('#aerr').textContent = friendly(e.code); }
 }
 $('#bin').onclick = () => doAuth(false);
@@ -308,7 +312,7 @@ async function enableNotifications(){
   try{
     const permission = await Notification.requestPermission();
     if(permission !== "granted") return alert("Notifications are blocked. Allow notifications for QAVLI in your browser settings.");
-    const registration = await navigator.serviceWorker.register("sw.js?v=6");
+    const registration = await navigator.serviceWorker.register("sw.js?v=7");
     const token = await getToken(messaging,{vapidKey:FCM_VAPID_KEY,serviceWorkerRegistration:registration});
     if(!token) return alert("Could not create a notification subscription.");
     const tokenId = encodeURIComponent(token).slice(0,500);
@@ -464,13 +468,60 @@ $('#f').onsubmit = async e => {
     if(replyTo)payload.replyTo={id:replyTo.id,text:String(replyTo.text||'').slice(0,200)};
     await addDoc(collection(db,'chats',cur.id,'messages'),payload);
     await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:text.slice(0,120)});
+    integrations.track('message_sent',{has_reply:Boolean(replyTo),message_length:text.length});
     replyTo=null;$('#replybar').hidden=true;
   }catch(e){i.value=text;toast('Message not sent. Check your internet and try again.')}
 };
 $('#in').addEventListener('input',()=>setTyping(!!$('#in').value.trim()));
-$('#filePick').onchange=async e=>{const file=e.target.files[0];if(!file||!cur)return;const allowed=/^(image\/|application\/pdf|text\/plain|application\/zip|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)/i;if(file.size>15*1024*1024){e.target.value='';return toast('File must be 15 MB or smaller.')}if(!allowed.test(file.type)){e.target.value='';return toast('This file type is not supported.')}try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'chatFiles/'+cur.id+'/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);const data={senderId:me.uid,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()},fileUrl:url,fileName:file.name,fileType:file.type};if(file.type.startsWith('image/'))data.imageUrl=url;await addDoc(collection(db,'chats',cur.id,'messages'),data);await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:'📎 '+file.name.slice(0,100)});e.target.value='';toast('File sent.')}catch(err){toast('Upload failed ('+safeError(err)+')');e.target.value=''}};
+$('#filePick').onchange=async e=>{
+  const file=e.target.files[0];
+  if(!file||!cur)return;
+  const allowed=/^(image\\/|application\\/pdf|text\\/plain|application\\/zip|application\\/msword|application\\/vnd\\.openxmlformats-officedocument\\.wordprocessingml\\.document)/i;
+  if(file.size>15*1024*1024){e.target.value='';return toast('File must be 15 MB or smaller.')}
+  if(!allowed.test(file.type)){e.target.value='';return toast('This file type is not supported.')}
+  try{
+    let media;
+    if(integrations.cloudinaryReady()){
+      media=await integrations.uploadToCloudinary(file,'qavli/chats/'+cur.id);
+    }else{
+      const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const r=ref(storage,'chatFiles/'+cur.id+'/'+me.uid+'/'+Date.now()+'_'+safe);
+      await uploadBytes(r,file);
+      media={url:await getDownloadURL(r)};
+    }
+    const data={senderId:me.uid,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()},fileUrl:media.url,fileName:file.name,fileType:file.type};
+    if(file.type.startsWith('image/'))data.imageUrl=media.url;
+    if(media.publicId)data.cloudinaryPublicId=media.publicId;
+    if(media.resourceType)data.mediaResourceType=media.resourceType;
+    await addDoc(collection(db,'chats',cur.id,'messages'),data);
+    await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:'📎 '+file.name.slice(0,100)});
+    integrations.track('file_sent',{provider:integrations.cloudinaryReady()?'cloudinary':'firebase',type:file.type});
+    e.target.value='';toast('File sent.');
+  }catch(err){toast('Upload failed ('+safeError(err)+')');e.target.value=''}
+};
 $('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:\n1 = Change display name\n2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim();profiles[me.uid]=prof}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
-$('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;profiles[me.uid]=prof;alert('Profile picture updated.')}catch(err){toast('Could not upload picture ('+safeError(err)+')')}e.target.value=''};
+$('#avatarFile').onchange=async e=>{
+  const file=e.target.files[0];
+  if(!file||!me)return;
+  if(!file.type.startsWith('image/'))return alert('Please choose an image.');
+  if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');
+  try{
+    let media;
+    if(integrations.cloudinaryReady()){
+      media=await integrations.uploadToCloudinary(file,'qavli/avatars/'+me.uid);
+    }else{
+      const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+      const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);
+      await uploadBytes(r,file);
+      media={url:await getDownloadURL(r)};
+    }
+    await updateDoc(doc(db,'users',me.uid),{avatarUrl:media.url});
+    prof.avatarUrl=media.url;profiles[me.uid]=prof;
+    integrations.track('profile_photo_updated',{provider:integrations.cloudinaryReady()?'cloudinary':'firebase'});
+    toast('Profile picture updated.');
+  }catch(err){toast('Could not upload picture ('+safeError(err)+')')}
+  e.target.value=''
+};
 $('#back').onclick = () => { if (unC) { unC(); unC = null; } if(unTyping){unTyping();unTyping=null} if(unPresence){unPresence();unPresence=null} setTyping(false); cur = null; show('vhome'); };
 $('#inv').onclick = () => {
   if(!cur?.isGroup){ return alert('Invite links are available for groups.'); }
