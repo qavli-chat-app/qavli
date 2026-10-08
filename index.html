@@ -505,9 +505,7 @@ $('#filePick').onchange=async e=>{
     e.target.value='';toast('File sent.');
   }catch(err){toast('Upload failed ('+safeError(err)+')');e.target.value=''}
 };
-$('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:
-1 = Change display name
-2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim();profiles[me.uid]=prof}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
+$('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:\n1 = Change display name\n2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim();profiles[me.uid]=prof}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
 $('#avatarFile').onchange=async e=>{
   const file=e.target.files[0];
   if(!file||!me)return;
