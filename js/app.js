@@ -1,6 +1,6 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,setPersistence,browserLocalPersistence,updateProfile} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,limit,orderBy,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig={apiKey:"AIzaSyA3DT-yjo96ntatEA6V7K63x9lofg87ESjcA",authDomain:"qavli-37983.firebaseapp.com",projectId:"qavli-37983",storageBucket:"qavli-37983.firebasestorage.app",appId:"1:168938701514:web:783d81a63d8e4423e56a33",messagingSenderId:"168938701514"};
