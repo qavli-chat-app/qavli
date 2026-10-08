@@ -16,7 +16,14 @@ service cloud.firestore {
     }
 
     function isChatMember(chatId) {
-      return signedIn() && request.auth.uid in chatData(chatId).members;
+      return signedIn()
+        && chatData(chatId).members is list
+        && request.auth.uid in chatData(chatId).members;
+    }
+
+    function validText(field, max) {
+      return request.resource.data.get(field, '') is string
+        && request.resource.data.get(field, '').size() <= max;
     }
 
     match /users/{uid} {
@@ -43,7 +50,9 @@ service cloud.firestore {
       allow read: if isSelf(uid);
       allow create, update: if isSelf(uid)
         && request.resource.data.token is string
-        && request.resource.data.token.size() <= 4096;
+        && request.resource.data.token.size() <= 4096
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['token', 'link', 'updatedAt']);
       allow delete: if isSelf(uid);
     }
 
@@ -117,10 +126,20 @@ service cloud.firestore {
         allow create: if isChatMember(chatId)
           && request.resource.data.senderId == request.auth.uid
           && request.resource.data.createdAt is timestamp
-          && request.resource.data.get('text', '') is string
-          && request.resource.data.get('text', '').size() <= 2000
+          && validText('text', 2000)
           && request.resource.data.get('fileName', '') is string
-          && request.resource.data.get('fileName', '').size() <= 255;
+          && request.resource.data.get('fileName', '').size() <= 255
+          && request.resource.data.get('fileType', '') is string
+          && request.resource.data.get('fileType', '').size() <= 120
+          && request.resource.data.get('fileUrl', '') is string
+          && request.resource.data.get('fileUrl', '').size() <= 2048
+          && request.resource.data.get('imageUrl', '') is string
+          && request.resource.data.get('imageUrl', '').size() <= 2048
+          && request.resource.data.get('replyTo', {}) is map
+          && request.resource.data.get('replyTo', {}).get('id', '') is string
+          && request.resource.data.get('replyTo', {}).get('id', '').size() <= 200
+          && request.resource.data.get('replyTo', {}).get('text', '') is string
+          && request.resource.data.get('replyTo', {}).get('text', '').size() <= 200;
 
         allow update: if isChatMember(chatId) && (
           // Only the original sender can edit/soft-delete their message.
@@ -128,8 +147,7 @@ service cloud.firestore {
             && request.resource.data.senderId == resource.data.senderId
             && request.resource.data.diff(resource.data).affectedKeys()
               .hasOnly(['text', 'edited', 'deleted'])
-            && request.resource.data.get('text', '') is string
-            && request.resource.data.get('text', '').size() <= 2000)
+            && validText('text', 2000))
           ||
           // Members may update reaction/read-receipt metadata only.
           (request.resource.data.diff(resource.data).affectedKeys()
