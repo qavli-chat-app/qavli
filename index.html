@@ -175,7 +175,8 @@ const firebaseConfig = {
   apiKey: "AIzaSyA3DT-yjo96atEA6V7K63x9lofg87ESjcA",
   authDomain: "qavli-37983.firebaseapp.com",
   projectId: "qavli-37983",
-  appId: "1:168938701514:web:783d81a63d8e4423e56a33"
+  appId: "1:168938701514:web:783d81a63d8e4423e56a33",
+  messagingSenderId: "168938701514"
 };
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app), messaging = getMessaging(app); setPersistence(auth,browserLocalPersistence).catch(()=>{});
 const FCM_VAPID_KEY = "PASTE_YOUR_FIREBASE_WEB_PUSH_VAPID_PUBLIC_KEY_HERE";
