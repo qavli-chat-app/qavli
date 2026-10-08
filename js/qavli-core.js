@@ -10,11 +10,11 @@
 
   const link=document.createElement('link');
   link.rel='stylesheet';
-  link.href='css/premium.css?v=21';
+  link.href='css/premium.css?v=22';
   document.head.appendChild(link);
 
   window.QAVLI=Object.freeze({
-    version:'2.1-premium',
+    version:'2.2-premium',
     clampText(value,max){return String(value??'').trim().slice(0,max)},
     debounce(fn,delay=250){let timer;return(...args)=>{clearTimeout(timer);timer=setTimeout(()=>fn(...args),delay)}},
     prefersReducedMotion:()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true
