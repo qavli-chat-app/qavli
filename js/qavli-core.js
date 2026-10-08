@@ -1,4 +1,4 @@
-/* QAVLI Premium 2.3 runtime */
+/* QAVLI Premium 2.4 runtime */
 (function(){
   document.documentElement.classList.add('qavli-premium');
   document.body.classList.add('qavli-premium');
@@ -10,11 +10,11 @@
 
   const link=document.createElement('link');
   link.rel='stylesheet';
-  link.href='css/premium.css?v=23';
+  link.href='css/premium.css?v=24';
   document.head.appendChild(link);
 
   window.QAVLI=Object.freeze({
-    version:'2.3-premium',
+    version:'2.4-premium',
     clampText(value,max){return String(value??'').trim().slice(0,max)},
     debounce(fn,delay=250){let timer;return(...args)=>{clearTimeout(timer);timer=setTimeout(()=>fn(...args),delay)}},
     prefersReducedMotion:()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true
