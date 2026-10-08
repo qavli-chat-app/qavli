@@ -13,7 +13,7 @@
 <meta name="theme-color" content="#14213d">
 <title>QAVLI</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon.svg">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <style>
 :root{--bg:#f3f5fa;--card:#fff;--ink:#14213d;--mute:#667089;--line:#dfe4ef;--brand:#14213d;--accent:#fca311;--mine:#fde3b0;--other:#fff}
@@ -112,7 +112,10 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 }
 @media(max-width:600px){
   .bar{min-height:68px}.bar button{padding:9px 10px;font-size:13px}.bar h2{font-size:20px}
-  #vhome .bar-actions button{font-size:12px}#vhome .bar-actions button:first-child{display:inline-flex}
+  #vhome .bar-actions button{font-size:12px}
+  #forgot{background:transparent!important;box-shadow:none!important;color:var(--q-blue);border:0;height:auto!important;padding:8px!important;font-weight:700}
+  .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translate(-50%,16px);z-index:100000;max-width:min(92vw,460px);padding:12px 16px;border-radius:14px;background:#102f48;color:#fff;box-shadow:0 14px 35px rgba(0,0,0,.22);opacity:0;pointer-events:none;transition:.2s;font-size:13px}.toast.on{opacity:1;transform:translate(-50%,0)}
+#vhome .bar-actions button:first-child{display:inline-flex}
   .msg{max-width:86%}
 }
 @media(prefers-color-scheme:dark){
@@ -129,6 +132,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 </style>
 </head>
 <body>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <div id="vauth" class="v on pad">
   <div class="logo">Q</div>
@@ -140,6 +144,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
   <button id="bin">Sign in</button>
   <p></p>
   <button id="bup" class="sec">Create account</button>
+  <button id="forgot" class="link-btn" type="button">Forgot password?</button>
 </div>
 
 <div id="vsetup" class="v pad">
@@ -166,7 +171,7 @@ h1{font:800 clamp(32px,7vw,46px)/1.05 Georgia,serif;letter-spacing:-1px}
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,setPersistence,browserLocalPersistence} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,orderBy,limit,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import {getMessaging,getToken,onMessage,deleteToken} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
@@ -183,6 +188,9 @@ const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestor
 const FCM_VAPID_KEY = "BL24GOGkIoOkKDuD05DoZ8TXLgoGkSbXO8Do4XASYW3CIFvDZwvUA5h8_injvbPoKnjZTOCScc0JVODFeuV7TGE";
 let fcmUnsub = null;
 const $ = s => document.querySelector(s);
+let toastTimer=null;
+function toast(message,ms=2600){const t=$("#toast");if(!t)return;t.textContent=String(message||"");t.classList.add("on");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("on"),ms)}
+function safeError(e){return e?.code||e?.message||"unknown error"}
 let me = null, prof = null, cur = null, unC = null, unL = null, unTyping = null, unPresence = null, names = {}, profiles = {}, currentMessages = [], replyTo = null, typingTimer = null;
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
@@ -212,7 +220,9 @@ const friendly = c => ({
   'auth/weak-password': 'Password needs 6 or more characters.',
   'auth/invalid-email': 'This email is not valid.',
   'auth/operation-not-allowed': 'Email login is not turned on in Firebase yet.',
-  'auth/network-request-failed': 'No internet. Try again.'
+  'auth/network-request-failed': 'No internet. Try again.',
+  'auth/too-many-requests': 'Too many attempts. Please wait and try again.',
+  'auth/user-disabled': 'This account is disabled.'
 }[c] || 'Something went wrong (' + c + ')');
 
 async function doAuth(up) {
@@ -223,7 +233,12 @@ async function doAuth(up) {
 }
 $('#bin').onclick = () => doAuth(false);
 $('#bup').onclick = () => doAuth(true);
-$('#out').onclick = () => signOut(auth);
+$('#forgot').onclick = async () => {
+  const email=$('#em').value.trim(); if(!email)return toast('Enter your email first.');
+  try{await sendPasswordResetEmail(auth,email);toast('Password reset email sent. Check your inbox.')}
+  catch(e){toast(friendly(e.code))}
+};
+$('#out').onclick = async () => {try{await signOut(auth)}catch(e){toast('Could not sign out.')}};
 
 onAuthStateChanged(auth, async u => {
   if (!u) {
@@ -315,8 +330,10 @@ function home() {
   if (unL) unL();
   unL = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => renderList(snap.docs),
     () => { $('#list').textContent = 'Could not load chats. Check your internet.'; });
-  const j = new URLSearchParams(location.search).get('join');
-  if (j) { history.replaceState(null, '', location.pathname); joinLink(j); }
+  const params=new URLSearchParams(location.search), j=params.get('join'), chatId=params.get('chat');
+  if(j||chatId)history.replaceState(null,'',location.pathname);
+  if(j)joinLink(j);
+  if(chatId)openDeepChat(chatId);
 }
 async function renderList(docs) {
   const items = docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => ((b.lastActivityAt && b.lastActivityAt.seconds) || (b.createdAt && b.createdAt.seconds) || 0) - ((a.lastActivityAt && a.lastActivityAt.seconds) || (a.createdAt && a.createdAt.seconds) || 0));
@@ -357,21 +374,23 @@ $('#bgrp').onclick = async () => {
     openChat({ id: r.id, isGroup: true, name: n, members: [me.uid] }, n);
   } catch (e) { alert('Could not create group (' + e.code + ')'); }
 };
+async function openDeepChat(id){try{const s=await getDoc(doc(db,'chats',id));if(!s.exists())return toast('That chat is no longer available.');const c={id,...s.data()};if(!c.members?.includes(me.uid))return toast('You are not a member of this chat.');const other=c.members.find(x=>x!==me.uid);if(other)await ensureProfiles([other]);openChat(c,c.isGroup?c.name:(names[other]||'Chat'));}catch(e){toast('Could not open chat ('+safeError(e)+')')}}
 async function joinLink(id) {
   try {
     const ref = doc(db, 'chats', id), s = await getDoc(ref);
-    if (!s.exists() || !s.data().isGroup) return alert('This invite link is not valid.');
+    if (!s.exists() || !s.data().isGroup) return toast('This invite link is not valid.');
     const c = { id, ...s.data() };
     if (c.members.includes(me.uid)) return openChat(c, c.name);
     if (!confirm('Join the group "' + c.name + '"?')) return;
     await updateDoc(ref, { members: arrayUnion(me.uid) });
+    c.members=[...new Set([...(c.members||[]),me.uid])];
     openChat(c, c.name);
-  } catch (e) { alert('Could not join (' + e.code + ')'); }
+  } catch (e) { toast('Could not join (' + safeError(e) + ')'); }
 }
 
 /* ---------- chat ---------- */
 function openChat(c, title) {
-  cur = c; $('#ct').textContent = title; $('#presence').textContent = ''; const avatar=$('#chatAvatar'); avatar.textContent=(title||'Q')[0].toUpperCase(); avatar.style.backgroundImage=''; const other=c.members?.find(x=>x!==me.uid); const avatarUrl=!c.isGroup ? (profiles[other]?.avatarUrl||c.memberProfiles?.[other]?.avatarUrl||'') : ''; if(avatarUrl){avatar.textContent='';avatar.style.backgroundImage=`url(${avatarUrl})`} $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
+  cur = {...c,members:Array.isArray(c.members)?[...c.members]:[]}; $('#ct').textContent = title; $('#presence').textContent = ''; const avatar=$('#chatAvatar'); avatar.textContent=(title||'Q')[0].toUpperCase(); avatar.style.backgroundImage=''; const other=c.members?.find(x=>x!==me.uid); const avatarUrl=!c.isGroup ? (profiles[other]?.avatarUrl||c.memberProfiles?.[other]?.avatarUrl||'') : ''; if(avatarUrl){avatar.textContent='';avatar.style.backgroundImage=`url(${avatarUrl})`} $('#inv').hidden = !c.isGroup; $('#manageGroup').hidden = !c.isGroup; $('#msgs').textContent = ''; show('vchat');
   if(!c.isGroup&&other){if(unPresence)unPresence();unPresence=onSnapshot(doc(db,'users',other),s=>{const p=s.exists()?s.data():{};$('#presence').textContent=p.online?'● online':(p.lastSeen?.toDate?'last seen '+p.lastSeen.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'offline');},()=>{$('#presence').textContent=''});}
   if (unC) unC(); if(unTyping)unTyping(); listenTyping(c);
   unC = onSnapshot(query(collection(db, 'chats', c.id, 'messages'), orderBy('createdAt', 'desc'), limit(100)), async snap => {
@@ -387,9 +406,13 @@ function renderMsgs(ms) {
   const M=$('#msgs'), near=M.scrollHeight-M.scrollTop-M.clientHeight<150; M.textContent='';
   ms.filter(m=>!filter||(m.text||'').toLowerCase().includes(filter)).forEach(m=>{
     const mine=m.senderId===me.uid,d=el('div','msg'+(mine?' me':'')); d.dataset.id=m.id;
+    if(m.deleted)d.classList.add('deleted');
     if(cur.isGroup&&!mine)d.append(el('b','who',names[m.senderId]||'Member'));
     if(m.replyTo)d.append(el('div','reply-preview','↩ '+(m.replyTo.text||'Message').slice(0,90)));
-    if(m.imageUrl){const im=document.createElement('img');im.src=m.imageUrl;im.alt=m.fileName||'Shared image';im.style='max-width:100%;max-height:320px;border-radius:12px;display:block;margin:4px 0;cursor:pointer';im.onclick=()=>window.open(m.imageUrl,'_blank');d.append(im)} if(m.fileUrl){const a=document.createElement('a');a.href=m.fileUrl;a.target='_blank';a.rel='noopener';a.textContent='📎 '+(m.fileName||'Download file');d.append(a)} if(m.text)d.append(el('span','',m.deleted?'This message was deleted.':(m.text||'')));
+    if(m.imageUrl&&!m.deleted){const im=document.createElement('img');im.src=m.imageUrl;im.alt=m.fileName||'Shared image';im.loading='lazy';im.decoding='async';im.style='max-width:100%;max-height:320px;border-radius:12px;display:block;margin:4px 0;cursor:pointer';im.onclick=()=>window.open(m.imageUrl,'_blank','noopener');d.append(im)}
+    if(m.fileUrl&&!m.deleted){const a=document.createElement('a');a.href=m.fileUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='📎 '+(m.fileName||'Download file');d.append(a)}
+    if(m.deleted)d.append(el('span','', 'This message was deleted.'));
+    else if(m.text)d.append(el('span','',m.text));
     const stamp=(m.pending?'Sending...':(m.createdAt&&m.createdAt.toDate?m.createdAt.toDate().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''))+(m.edited?' · edited':''); const readState=mine&&!m.pending?(Object.keys(m.readBy||{}).some(k=>k!==me.uid)?' · ✓✓':' · ✓'):''; d.append(el('i','time',stamp+readState));
     if(m.reaction)d.append(el('span','reaction',m.reaction));
     if(!m.deleted){const a=el('div','msg-tools'); const r=el('button','','↩');r.onclick=()=>setReply(m);const x=el('button','','☺');x.onclick=()=>reactMsg(m);const cp=el('button','','Copy');cp.onclick=()=>navigator.clipboard?.writeText(m.text||'');a.append(r,x,cp);if(mine){const ed=el('button','','Edit');ed.onclick=()=>editMsg(m);const dl=el('button','','Delete');dl.onclick=()=>removeMsg(m);a.append(ed,dl)}d.append(a)}
@@ -399,27 +422,33 @@ function renderMsgs(ms) {
 function setReply(m){replyTo={id:m.id,text:m.text||''};$('#replyText').textContent='Replying: '+(m.text||'').slice(0,80);$('#replybar').hidden=false;$('#in').focus()}
 async function editMsg(m){const v=prompt('Edit message',m.text||'');if(v===null||!v.trim())return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{text:v.trim(),edited:true})}catch(e){alert('Could not edit ('+e.code+')')}}
 async function removeMsg(m){if(!confirm('Delete this message for everyone?'))return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{text:'',deleted:true})}catch(e){alert('Could not delete ('+e.code+')')}}
-async function reactMsg(m){const v=prompt('Reaction: ❤️  👍  😂  😮  😢  🔥','❤️');if(!v)return;try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{reaction:v.slice(0,4)})}catch(e){alert('Could not react ('+e.code+')')}}
+async function reactMsg(m){const choices=['❤️','👍','😂','😮','😢','🔥'];const current=m.reaction||'';const next=choices[(choices.indexOf(current)+1)%choices.length];try{await updateDoc(doc(db,'chats',cur.id,'messages',m.id),{reaction:next})}catch(e){toast('Could not react ('+safeError(e)+')')}}
 $('#manageGroup').onclick=async()=>{if(!cur?.isGroup)return;if(cur.createdBy!==me.uid)return alert('Only the group creator can manage members.');const u=(prompt('Enter username to add')||'').trim().toLowerCase();if(!/^[a-z0-9_]{3,20}$/.test(u))return;try{const s=await getDocs(query(collection(db,'users'),where('username','==',u),limit(1)));if(s.empty)return alert('User not found.');const uid=s.docs[0].id;if(cur.members.includes(uid))return alert('Already a member.');await updateDoc(doc(db,'chats',cur.id),{members:arrayUnion(uid)});cur.members.push(uid);alert('Member added.');}catch(e){alert('Could not add member ('+e.code+')')}};
-$('#f').onsubmit = e => {
+$('#f').onsubmit = async e => {
   e.preventDefault();
-  const i = $('#in'), text = i.value.trim(); if (!text || !cur) return; i.value = '';
-  setTyping(false); addDoc(collection(db, 'chats', cur.id, 'messages'), { senderId: me.uid, text, createdAt: serverTimestamp(), readBy:{[me.uid]:serverTimestamp()}, replyTo: replyTo ? {id:replyTo.id,text:replyTo.text} : null }).then(()=>updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:text.slice(0,120)})).then(()=>{replyTo=null;$('#replybar').hidden=true})
-    .catch(() => alert('Message not sent. Check your internet and try again.'));
+  const i=$('#in'),text=i.value.trim();if(!text||!cur)return;
+  i.value='';setTyping(false);
+  try{
+    const payload={senderId:me.uid,text,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()}};
+    if(replyTo)payload.replyTo={id:replyTo.id,text:String(replyTo.text||'').slice(0,200)};
+    await addDoc(collection(db,'chats',cur.id,'messages'),payload);
+    await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:text.slice(0,120)});
+    replyTo=null;$('#replybar').hidden=true;
+  }catch(e){i.value=text;toast('Message not sent. Check your internet and try again.')}
 };
 $('#in').addEventListener('input',()=>setTyping(!!$('#in').value.trim()));
-$('#filePick').onchange=async e=>{const file=e.target.files[0];if(!file||!cur)return;if(file.size>15*1024*1024)return alert('File must be 15 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'chatFiles/'+cur.id+'/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);const data={senderId:me.uid,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()},fileUrl:url,fileName:file.name,fileType:file.type};if(file.type.startsWith('image/'))data.imageUrl=url;await addDoc(collection(db,'chats',cur.id,'messages'),data);await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:'📎 '+file.name});e.target.value=''}catch(err){alert('Upload failed ('+(err.code||'network')+')')}};
+$('#filePick').onchange=async e=>{const file=e.target.files[0];if(!file||!cur)return;const allowed=/^(image\/|application\/pdf|text\/plain|application\/zip|application\/msword|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)/i;if(file.size>15*1024*1024){e.target.value='';return toast('File must be 15 MB or smaller.')}if(!allowed.test(file.type)){e.target.value='';return toast('This file type is not supported.')}try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'chatFiles/'+cur.id+'/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);const data={senderId:me.uid,createdAt:serverTimestamp(),readBy:{[me.uid]:serverTimestamp()},fileUrl:url,fileName:file.name,fileType:file.type};if(file.type.startsWith('image/'))data.imageUrl=url;await addDoc(collection(db,'chats',cur.id,'messages'),data);await updateDoc(doc(db,'chats',cur.id),{lastActivityAt:serverTimestamp(),lastMessage:'📎 '+file.name.slice(0,100)});e.target.value='';toast('File sent.')}catch(err){toast('Upload failed ('+safeError(err)+')');e.target.value=''}};
 $('#cancelReply').onclick=()=>{replyTo=null;$('#replybar').hidden=true}; $('#searchChat').onclick=()=>{$('#chatSearch').hidden=!$('#chatSearch').hidden; if(!$('#chatSearch').hidden)$('#chatQuery').focus()}; $('#chatQuery').oninput=()=>renderMsgs(currentMessages); $('#profileBtn').onclick=async()=>{const choice=prompt('Profile options:\n1 = Change display name\n2 = Change profile picture','1');if(choice==='1'){const n=prompt('Display name',prof?.displayName||'');if(n&&n.trim())updateDoc(doc(db,'users',me.uid),{displayName:n.trim()}).then(()=>{prof.displayName=n.trim();names[me.uid]=n.trim();profiles[me.uid]=prof}).catch(e=>alert('Could not update ('+e.code+')'))}else if(choice==='2')$('#avatarFile').click()};
-$('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;profiles[me.uid]=prof;alert('Profile picture updated.')}catch(err){alert('Could not upload picture ('+(err.code||'network')+')')}e.target.value=''};
+$('#avatarFile').onchange=async e=>{const file=e.target.files[0];if(!file||!me)return;if(!file.type.startsWith('image/'))return alert('Please choose an image.');if(file.size>5*1024*1024)return alert('Profile picture must be 5 MB or smaller.');try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'_');const r=ref(storage,'avatars/'+me.uid+'/'+Date.now()+'_'+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,'users',me.uid),{avatarUrl:url});prof.avatarUrl=url;profiles[me.uid]=prof;alert('Profile picture updated.')}catch(err){toast('Could not upload picture ('+safeError(err)+')')}e.target.value=''};
 $('#back').onclick = () => { if (unC) { unC(); unC = null; } if(unTyping){unTyping();unTyping=null} if(unPresence){unPresence();unPresence=null} setTyping(false); cur = null; show('vhome'); };
 $('#inv').onclick = () => {
   if(!cur?.isGroup){ return alert('Invite links are available for groups.'); }
-  const l = location.origin + location.pathname + '?join=' + cur.id;
+  const l = location.origin + location.pathname + '?join=' + encodeURIComponent(cur.id);
   if (navigator.clipboard) navigator.clipboard.writeText(l).then(() => alert('Invite link copied. Share it with people you want in this group.'), () => prompt('Copy invite link', l));
   else prompt('Copy invite link', l);
 };
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();for(const r of regs){if(new URL(r.scope).pathname.includes('/qavli/'))await r.unregister()}for(const k of await caches.keys()){if(k.startsWith('qavli-shell-'))await caches.delete(k)}await navigator.serviceWorker.register('sw.js?v=5')}catch(e){}})}</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js?v=6').catch(()=>{}))}</script>
 <script src="js/qavli-core.js"></script>
 </body>
   </html>
