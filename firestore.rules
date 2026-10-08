@@ -48,7 +48,13 @@ service cloud.firestore {
     // FCM web-push tokens are private to their owner.
     match /users/{uid}/notificationTokens/{tokenId} {
       allow read: if isSelf(uid);
-      allow create, update: if isSelf(uid)
+      allow create: if isSelf(uid)
+        && request.resource.data.token is string
+        && request.resource.data.token.size() <= 4096
+        && request.resource.data.diff({}).affectedKeys()
+          .hasOnly(['token', 'link', 'updatedAt']);
+
+      allow update: if isSelf(uid)
         && request.resource.data.token is string
         && request.resource.data.token.size() <= 4096
         && request.resource.data.diff(resource.data).affectedKeys()
