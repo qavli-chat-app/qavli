@@ -1,4 +1,5 @@
 name: Build and publish QAVLI Android APK
+# Rebuild requested for the refreshed QAVLI interface and launcher branding.
 
 on:
   push:
