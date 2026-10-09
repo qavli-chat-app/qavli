@@ -79,13 +79,14 @@ async function searchUsers(){
   box.innerHTML='<div class="user-search-empty">Searching QAVLI users…</div>';
   try{
     const term=raw.toLowerCase();
-    const [usernames,names]=await Promise.all([
-      getDocs(query(collection(db,"users"),where("username",">=",term),where("username","<=",term+"\uf8ff"),limit(8))),
-      getDocs(query(collection(db,"users"),where("displayName",">=",raw),where("displayName","<=",raw+"\uf8ff"),limit(8)))
+    const results=await Promise.allSettled([
+      getDocs(query(collection(db,"users"),where("username",">=",term),where("username","<=",term+"\\uf8ff"),limit(8))),
+      getDocs(query(collection(db,"users"),where("displayName",">=",raw),where("displayName","<=",raw+"\\uf8ff"),limit(8)))
     ]);
     if(req!==userSearchRequest)return;
     const found=new Map();
-    [...usernames.docs,...names.docs].forEach(d=>{if(d.id!==state.user.uid)found.set(d.id,{id:d.id,...d.data()})});
+    results.filter(r=>r.status==="fulfilled").forEach(r=>r.value.docs.forEach(d=>{if(d.id!==state.user.uid)found.set(d.id,{id:d.id,...d.data()})}));
+    if(!found.size&&results.every(r=>r.status==="rejected"))throw results[0].reason;
     box.innerHTML="";
     if(!found.size){box.innerHTML='<div class="user-search-empty">No users found. Check the username spelling.</div>';return}
     [...found.values()].forEach(p=>{
