@@ -9,6 +9,30 @@ const $=id=>document.getElementById(id);
 const state={user:null,profile:null,chats:[],active:null,messages:[],unsubs:[],search:"",chatSearch:"",reply:null,theme:localStorage.getItem("qavli-theme")||"light"};
 const profileCache=new Map();
 let toastTimer=0,typingTimeout=0;
+let deferredInstallPrompt=null;
+const installButton=document.getElementById("installPwaBtn");
+window.addEventListener("beforeinstallprompt",event=>{
+  event.preventDefault();
+  deferredInstallPrompt=event;
+  if(installButton)installButton.hidden=false;
+});
+window.addEventListener("appinstalled",()=>{
+  deferredInstallPrompt=null;
+  if(installButton)installButton.hidden=true;
+  toast("QAVLI installed successfully.");
+});
+if(installButton){
+  installButton.addEventListener("click",async()=>{
+    if(!deferredInstallPrompt){
+      toast("Open Chrome menu and choose Install app or Add to Home screen.");
+      return;
+    }
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt=null;
+    installButton.hidden=true;
+  });
+}
 
 function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2600)}
 function setConnection(online){const el=$("connectionState");if(!el)return;el.classList.toggle("offline",!online);el.lastChild.textContent=online?" Connected":" Offline"}
