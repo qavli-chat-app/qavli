@@ -423,3 +423,7 @@ body.dark .app-shell,body.dark .screen{background:#090715}
  .bottom-nav-item span{font-size:18px;line-height:1}.bottom-nav-item small{font-size:10px}
  .bottom-nav-item.active{background:linear-gradient(120deg,rgba(139,92,246,.23),rgba(91,33,182,.16));border-color:#4b3673;color:#e9ddff}
 }
+/* Footer primary destinations: Chats, People, Settings */
+.bottom-nav-item span{font-family:system-ui,sans-serif}
+.settings-modal .secondary{margin-top:8px}
+@media(max-width:820px){.bottom-nav{position:relative;z-index:5}.bottom-nav-item{min-height:52px}}
