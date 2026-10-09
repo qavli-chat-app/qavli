@@ -3,6 +3,8 @@
     <application
         android:allowBackup="false"
         android:label="QAVLI"
+        android:icon="@drawable/ic_qavli"
+        android:roundIcon="@drawable/ic_qavli"
         android:usesCleartextTraffic="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:supportsRtl="true">
