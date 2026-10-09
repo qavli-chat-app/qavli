@@ -80,8 +80,8 @@ async function searchUsers(){
   try{
     const term=raw.toLowerCase();
     const results=await Promise.allSettled([
-      getDocs(query(collection(db,"users"),where("username",">=",term),where("username","<=",term+"\\uf8ff"),limit(8))),
-      getDocs(query(collection(db,"users"),where("displayName",">=",raw),where("displayName","<=",raw+"\\uf8ff"),limit(8)))
+      getDocs(query(collection(db,"users"),where("username",">=",term),where("username","<=",term+"\uf8ff"),limit(8))),
+      getDocs(query(collection(db,"users"),where("displayName",">=",raw),where("displayName","<=",raw+"\uf8ff"),limit(8)))
     ]);
     if(req!==userSearchRequest)return;
     const found=new Map();
