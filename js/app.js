@@ -80,10 +80,10 @@ function updateUnreadBadge(){
 function renderChats(){
  updateUnreadBadge();
  const list=$("chatList"),needle=state.search.toLowerCase();list.innerHTML="";
- const arr=state.chats.filter(c=>(chatTitle(c)+" "+(c.lastMessage||"")).toLowerCase().includes(needle)&&(state.chatFilter==="all"||state.pinnedChats.has(c.id)));
+ const arr=state.chats.filter(c=>(chatTitle(c)+" "+(c.lastMessage||"")).toLowerCase().includes(needle)&&(state.chatFilter==="all"||(state.chatFilter==="groups"&&c.isGroup)||(state.chatFilter==="pinned"&&state.pinnedChats.has(c.id))));
  arr.sort((a,b)=>Number(state.pinnedChats.has(b.id))-Number(state.pinnedChats.has(a.id)));
  document.querySelectorAll("[data-chat-filter]").forEach(b=>b.classList.toggle("active",b.dataset.chatFilter===state.chatFilter));
- if(!arr.length){list.innerHTML='<div class="empty-card chat-empty"><b>'+(state.chatFilter==="pinned"?"No pinned chats yet":"No conversations found")+'</b><p>'+(state.chatFilter==="pinned"?"Pin a conversation with the pin button to keep it at the top on this device.":"Start a chat or try another search.")+'</p></div>';return}
+ if(!arr.length){list.innerHTML='<div class="empty-card chat-empty"><b>'+(state.chatFilter==="pinned"?"No pinned chats yet":state.chatFilter==="groups"?"No groups yet":"No conversations found")+'</b><p>'+(state.chatFilter==="pinned"?"Pin a conversation with the pin button to keep it at the top on this device.":state.chatFilter==="groups"?"Create a group to see it here.":"Start a chat or try another search.")+'</p></div>';return}
  arr.forEach(c=>{
   const wrap=document.createElement("div");wrap.className="chat-row-wrap";
   const b=document.createElement("button");b.type="button";b.className="chat-row"+(state.active?.id===c.id?" selected":"");
