@@ -1,0 +1,59 @@
+name: Build and publish QAVLI Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - ".github/workflows/android-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Keep the debug signing key stable between builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: qavli-android-debug-signing-key-v1
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Build installable APK
+        run: gradle -p android assembleDebug
+
+      - name: Upload APK build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: QAVLI-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish latest APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view qavli-apk-latest >/dev/null 2>&1 || gh release create qavli-apk-latest --title "QAVLI Android APK (latest)" --notes "Free Android WebView build for QAVLI. This app loads the live QAVLI website and uses its existing Firebase backend."
+          gh release upload qavli-apk-latest android/app/build/outputs/apk/debug/app-debug.apk --clobber
