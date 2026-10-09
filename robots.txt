@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://qavli-chat-app.github.io/qavli/sitemap.xml
