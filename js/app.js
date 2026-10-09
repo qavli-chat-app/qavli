@@ -6,7 +6,7 @@ import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com
 const firebaseConfig={apiKey:"AIzaSyCpRK0HE1z7iQ00WaBVbABh-RIjkqz38k8",authDomain:"qavli-37983.firebaseapp.com",projectId:"qavli-37983",storageBucket:"qavli-37983.firebasestorage.app",appId:"1:168938701514:web:783d81a63d8e4423e56a33",messagingSenderId:"168938701514"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
 const $=id=>document.getElementById(id);
-const state={user:null,profile:null,chats:[],active:null,messages:[],unsubs:[],search:"",chatSearch:"",reply:null,theme:localStorage.getItem("qavli-theme")||"light",chatFilter:"all",pinnedChats:new Set(JSON.parse(localStorage.getItem("qavli-pinned-chats")||"[]"))};
+const state={user:null,profile:null,chats:[],active:null,messages:[],unsubs:[],search:"",chatSearch:"",reply:null,theme:localStorage.getItem("qavli-theme")||"dark",chatFilter:"all",pinnedChats:new Set(JSON.parse(localStorage.getItem("qavli-pinned-chats")||"[]"))};
 const profileCache=new Map();
 let toastTimer=0,typingTimeout=0;
 let deferredInstallPrompt=null;
