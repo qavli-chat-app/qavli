@@ -835,3 +835,15 @@ button:disabled{opacity:.58;cursor:not-allowed}
 .chat-row,.tool-row,.filter-chip,.bottom-nav-item,.primary,.secondary,.talk-admin-center{transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease}
 @media(hover:hover){.primary:hover,.talk-admin-center:hover{transform:translateY(-1px)}.chat-row:hover,.tool-row:hover{border-color:#8e63c8!important}}
 @media(max-width:820px){.section-head{gap:12px}.section-head h2{font-size:clamp(1.35rem,5vw,1.75rem)}.chat-row{min-height:70px}.bottom-nav-item{min-height:58px}}
+
+
+/* QAVLI unread message visibility fix */
+.chat-row.has-unread{border-color:rgba(167,139,250,.7)!important;background:linear-gradient(110deg,rgba(139,92,246,.2),rgba(139,92,246,.07))!important}
+.chat-row.has-unread .chat-copy strong{font-weight:900!important}
+.chat-row.has-unread .chat-copy small{font-weight:750!important;color:#f1e8ff!important}
+.chat-unread-indicators{display:flex;align-items:center;justify-content:center;gap:7px;flex:none;margin-left:3px}
+.chat-unread-dot{display:block;width:10px;height:10px;border-radius:50%;background:#a78bfa;box-shadow:0 0 0 4px rgba(167,139,250,.16),0 0 15px rgba(167,139,250,.65);flex:none}
+.chat-row-unread-count{display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;padding:0 7px;border-radius:999px;background:linear-gradient(135deg,#b69aff,#7135dc)!important;color:#fff!important;font-size:12px;font-weight:900;line-height:1;box-shadow:0 0 16px rgba(139,92,246,.4);flex:none}
+body:not(.dark) .chat-row.has-unread{background:linear-gradient(110deg,#eee3ff,#faf6ff)!important;border-color:#b99ae7!important}
+body:not(.dark) .chat-row.has-unread .chat-copy small{color:#5d358a!important}
+body:not(.dark) .chat-row-unread-count{color:#fff!important}
