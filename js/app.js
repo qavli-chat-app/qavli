@@ -9,7 +9,7 @@ const $=id=>document.getElementById(id);
 const state={user:null,profile:null,chats:[],active:null,messages:[],unsubs:[],search:"",chatSearch:"",reply:null,theme:localStorage.getItem("qavli-theme")||"dark",chatFilter:"all",pinnedChats:new Set(JSON.parse(localStorage.getItem("qavli-pinned-chats")||"[]"))};
 const profileCache=new Map();
 const unreadCounts=new Map(),unreadListeners=new Map(),unreadLatestIds=new Map();
-let toastTimer=0,typingTimeout=0;
+let toastTimer=0,typingTimeout=0,statusUnsub=null;
 let deferredInstallPrompt=null;
 const installButton=document.getElementById("installPwaBtn");
 window.addEventListener("beforeinstallprompt",event=>{
@@ -90,7 +90,52 @@ async function talkToAdmin(){
 }
 function resumeTalkAdminIntent(){if(sessionStorage.getItem("qavli-talk-admin-intent")==="1"&&auth.currentUser&&state.profile)talkToAdmin()}
 
-function showHome(){screen("home");renderChats()}
+
+function showSection(name){
+  if(!state.user){showAuth("signin");return}
+  screen(name);
+  document.querySelectorAll("[data-footer-action]").forEach(b=>b.classList.toggle("active",b.dataset.footerAction===name));
+  if(statusUnsub&&name!=="updates"){statusUnsub();statusUnsub=null}
+  if(name==="updates")startStatusListener();
+}
+function startStatusListener(){
+  if(statusUnsub||!state.user)return;
+  const q=query(collection(db,"statuses"),orderBy("createdAt","desc"),limit(100));
+  statusUnsub=onSnapshot(q,snap=>{
+    const list=$("statusList");if(!list)return;
+    list.innerHTML="";
+    const now=Date.now();
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.expiresAt?.toDate?.()&&s.expiresAt.toDate().getTime()>now);
+    if(!docs.length){list.innerHTML='<p class="muted">No recent statuses yet. Be the first to post one.</p>';return}
+    for(const s of docs){
+      const card=document.createElement("article");card.className="status-card";
+      const avatar=document.createElement("div");avatar.className="status-avatar";
+      if(s.avatarUrl){const img=document.createElement("img");img.src=s.avatarUrl;img.alt="";avatar.appendChild(img)}else avatar.textContent=initials(s.displayName||s.username);
+      const body=document.createElement("div");body.className="status-content";
+      const heading=document.createElement("div");heading.className="status-heading";
+      const who=document.createElement("strong");who.textContent=s.authorId===state.user.uid?"You":(s.displayName||s.username||"QAVLI member");
+      const time=document.createElement("small");time.textContent=s.createdAt?.toDate?.()?s.createdAt.toDate().toLocaleString():"Just now";
+      heading.append(who,time);
+      const text=document.createElement("p");text.textContent=s.text||"";
+      body.append(heading,text);
+      if(s.authorId===state.user.uid){const del=document.createElement("button");del.type="button";del.className="status-delete";del.textContent="Delete";del.onclick=async()=>{try{await deleteDoc(doc(db,"statuses",s.id));toast("Status deleted.")}catch(e){toast("Could not delete status: "+errText(e))}};body.appendChild(del)}
+      card.append(avatar,body);list.appendChild(card);
+    }
+  },e=>{$("statusList").innerHTML='<p class="error">Could not load statuses. Check the deployed Firestore rules.</p>';console.warn("Status listener",e)});
+}
+async function postStatus(e){
+  e.preventDefault();const text=$("statusText").value.trim();$("statusError").textContent="";
+  if(!text)return $("statusError").textContent="Write a status first.";
+  if(text.length>500)return $("statusError").textContent="Status must be 500 characters or fewer.";
+  const b=$("statusForm").querySelector('button[type="submit"]');setBusy(b,true,"Posting…");
+  try{
+    await addDoc(collection(db,"statuses"),{authorId:state.user.uid,username:state.profile.username||"",displayName:state.profile.displayName||"",avatarUrl:state.profile.avatarUrl||"",text,createdAt:serverTimestamp(),expiresAt:new Date(Date.now()+24*60*60*1000)});
+    $("statusText").value="";toast("Status posted. It expires in 24 hours.");
+  }catch(err){$("statusError").textContent="Could not post status: "+errText(err)+" If rules were just updated, deploy them first."}
+  finally{setBusy(b,false)}
+}
+
+function showHome(){screen("home");document.querySelectorAll("[data-footer-action]").forEach(b=>b.classList.toggle("active",b.dataset.footerAction==="chats"));if(statusUnsub){statusUnsub();statusUnsub=null}renderChats()}
 function showChat(){screen("chat");document.querySelector("#chat .app-shell").classList.add("chat-open")}
 function closeChat(){clearChatListeners();state.active=null;state.messages=[];document.querySelector("#chat .app-shell").classList.remove("chat-open");showHome()}
 function avatarHTML(profile,name){const src=profile?.avatarUrl;if(src)return '<div class="avatar"><img src="'+src.replace(/"/g,"&quot;")+'" alt=""></div>';return '<div class="avatar">'+initials(name)+"</div>"}
@@ -100,7 +145,7 @@ async function hydrateChat(c){const others=(c.members||[]).filter(x=>x!==state.u
 async function hydrateChatList(){const visible=state.chats.filter(c=>chatTitle(c).toLowerCase().includes(state.search.toLowerCase()));await Promise.all(visible.map(hydrateChat));renderChats();}
 async function finishAuth(user){state.user=user;try{state.profile=await loadProfile(user);if(!state.profile){showSetup();return}$("homeGreeting").textContent="Welcome, "+(state.profile.displayName||state.profile.username||"there");$("profileBtn").title=state.profile.displayName||"Profile";setConnection(navigator.onLine);startHomeListener();showHome();clearTimeout(window.qavliBootTimer);setTimeout(resumeTalkAdminIntent,0);setDoc(doc(db,"users",user.uid),{online:true,lastSeen:serverTimestamp()},{merge:true}).catch(e=>console.warn("Presence update deferred",e));}catch(e){showFatal("Your account signed in, but QAVLI could not load your profile. "+errText(e))}}
 function showFatal(msg){screen("fatal");$("fatalText").textContent=msg}
-async function signOutUser(){
+async function signOutUser(){if(statusUnsub){statusUnsub();statusUnsub=null}
  const user=state.user;
  try{
   if(user)await updateDoc(doc(db,"users",user.uid),{online:false,lastSeen:serverTimestamp()});
@@ -274,9 +319,23 @@ async function uploadAvatar(file){if(!file||!file.type.startsWith("image/"))retu
 
 $("talkAdminAuth").onclick=talkToAdmin;$("talkAdminHome").onclick=talkToAdmin;$("talkAdminCenter").onclick=talkToAdmin;$("talkAdminMobile").onclick=talkToAdmin;
 $("authForm").onsubmit=e=>{e.preventDefault();$("authForm").dataset.mode==="signup"?signUp():signIn()};
-$("authSwitch").onclick=()=>showAuth($("authForm").dataset.mode==="signup"?"signin":"signup");$("passwordToggle").onclick=()=>{const p=$("password"),b=$("passwordToggle");const show=p.type==="password";p.type=show?"text":"password";b.textContent=show?"Hide":"Show";b.setAttribute("aria-label",show?"Hide password":"Show password")};$("forgot").onclick=resetPassword;$("saveProfile").onclick=saveProfile;$("newChatBtn").onclick=()=>openModal("newChatModal");$("groupBtn").onclick=()=>openModal("groupModal");$("newChatCreate").onclick=newChat;$("newChatUser").oninput=()=>{clearTimeout(userSearchTimer);userSearchTimer=setTimeout(searchUsers,350)};$("newChatUser").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();newChat()}};$("groupCreate").onclick=createGroup;$("closeNewChat").onclick=closeModal;$("closeGroup").onclick=closeModal;$("closeProfile").onclick=closeModal;$("saveProfileChanges").onclick=saveProfileChanges;$("profileBtn").onclick=profileEdit;$("signOut").onclick=signOutUser;$("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";applyTheme()};$("backBtn").onclick=closeChat;$("messageForm").onsubmit=e=>{e.preventDefault();sendMessage()};$("attachBtn").onclick=()=>$("fileInput").click();$("fileInput").onchange=e=>{sendFile(e.target.files[0]);e.target.value=""};$("messageInput").oninput=()=>{updateCount();setTyping(Boolean($("messageInput").value.trim()))};$("replyCancel").onclick=()=>{state.reply=null;$("replybar").hidden=true};$("chatSearchBtn").onclick=()=>{$("chatTools").classList.toggle("open");if($("chatTools").classList.contains("open"))$("chatSearch").focus()};$("chatSearch").oninput=e=>{state.chatSearch=e.target.value.toLowerCase();renderMessages()};$("manageBtn").onclick=addMember;$("inviteBtn").onclick=invite;$("profileFile").onchange=e=>uploadAvatar(e.target.files[0]);$("chatSearchHome").oninput=e=>{state.search=e.target.value;renderChats()};document.querySelectorAll("[data-chat-filter]").forEach(b=>b.onclick=()=>{state.chatFilter=b.dataset.chatFilter;renderChats()});document.querySelectorAll("[data-footer-action]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-footer-action]").forEach(x=>x.classList.toggle("active",x===b));if(b.dataset.footerAction==="chats"){state.chatFilter="all";renderChats()}else if(b.dataset.footerAction==="people"){openModal("newChatModal")}else if(b.dataset.footerAction==="settings"){openModal("settingsModal")}});$("settingsThemeBtn").onclick=()=>$("themeBtn").click();$("settingsNotificationsBtn").onclick=async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return}if(Notification.permission==="granted"){toast("Browser notifications are already enabled.");return}if(Notification.permission==="denied"){toast("Notifications are blocked in browser site settings.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"New-message notifications enabled.":"Notification permission was not granted.")}catch{toast("Could not enable notifications in this browser.")}};$("settingsProfileBtn").onclick=()=>{closeModal();profileEdit()};$("closeSettings").onclick=closeModal;$("settingsSignOut").onclick=signOutUser;$("closeFatal").onclick=()=>location.reload();document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal()}));
+$("authSwitch").onclick=()=>showAuth($("authForm").dataset.mode==="signup"?"signin":"signup");$("passwordToggle").onclick=()=>{const p=$("password"),b=$("passwordToggle");const show=p.type==="password";p.type=show?"text":"password";b.textContent=show?"Hide":"Show";b.setAttribute("aria-label",show?"Hide password":"Show password")};$("forgot").onclick=resetPassword;$("saveProfile").onclick=saveProfile;$("newChatBtn").onclick=()=>openModal("newChatModal");$("groupBtn").onclick=()=>openModal("groupModal");$("newChatCreate").onclick=newChat;$("newChatUser").oninput=()=>{clearTimeout(userSearchTimer);userSearchTimer=setTimeout(searchUsers,350)};$("newChatUser").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();newChat()}};$("groupCreate").onclick=createGroup;$("closeNewChat").onclick=closeModal;$("closeGroup").onclick=closeModal;$("closeProfile").onclick=closeModal;$("saveProfileChanges").onclick=saveProfileChanges;$("profileBtn").onclick=profileEdit;$("signOut").onclick=signOutUser;$("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";applyTheme()};$("backBtn").onclick=closeChat;$("messageForm").onsubmit=e=>{e.preventDefault();sendMessage()};$("attachBtn").onclick=()=>$("fileInput").click();$("fileInput").onchange=e=>{sendFile(e.target.files[0]);e.target.value=""};$("messageInput").oninput=()=>{updateCount();setTyping(Boolean($("messageInput").value.trim()))};$("replyCancel").onclick=()=>{state.reply=null;$("replybar").hidden=true};$("chatSearchBtn").onclick=()=>{$("chatTools").classList.toggle("open");if($("chatTools").classList.contains("open"))$("chatSearch").focus()};$("chatSearch").oninput=e=>{state.chatSearch=e.target.value.toLowerCase();renderMessages()};$("manageBtn").onclick=addMember;$("inviteBtn").onclick=invite;$("profileFile").onchange=e=>uploadAvatar(e.target.files[0]);$("chatSearchHome").oninput=e=>{state.search=e.target.value;renderChats()};document.querySelectorAll("[data-chat-filter]").forEach(b=>b.onclick=()=>{state.chatFilter=b.dataset.chatFilter;renderChats()});document.querySelectorAll("[data-footer-action]").forEach(b=>b.onclick=()=>{
+ const action=b.dataset.footerAction;
+ if(action==="chats"){state.chatFilter="all";showHome()}
+ else if(action==="people"){openModal("newChatModal")}
+ else if(["calls","updates","tools"].includes(action))showSection(action);
+ else if(action==="settings")openModal("settingsModal")
+});
+document.querySelectorAll("[data-go-chats]").forEach(b=>b.onclick=showHome);
+$("statusForm").onsubmit=postStatus;
+$("callsFindPeople").onclick=()=>openModal("newChatModal");
+$("callsFindPeopleMain").onclick=()=>openModal("newChatModal");
+$("toolsProfile").onclick=profileEdit;
+$("toolsSettings").onclick=()=>openModal("settingsModal");
+$("toolsNewGroup").onclick=()=>openModal("groupModal");
+$("toolsNewChat").onclick=()=>openModal("newChatModal");$("settingsThemeBtn").onclick=()=>$("themeBtn").click();$("settingsNotificationsBtn").onclick=async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return}if(Notification.permission==="granted"){toast("Browser notifications are already enabled.");return}if(Notification.permission==="denied"){toast("Notifications are blocked in browser site settings.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"New-message notifications enabled.":"Notification permission was not granted.")}catch{toast("Could not enable notifications in this browser.")}};$("settingsProfileBtn").onclick=()=>{closeModal();profileEdit()};$("closeSettings").onclick=closeModal;$("settingsSignOut").onclick=signOutUser;$("closeFatal").onclick=()=>location.reload();document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal()}));
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&state.user){setConnection(navigator.onLine);if(state.active)markVisibleRead();}});
 if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data?.type==="QAVLI_OPEN_CHAT"&&e.data.chatId){const c=state.chats.find(x=>x.id===e.data.chatId);if(c)openChat(c)}})}
 window.addEventListener("online",()=>{setConnection(true);if(state.user)toast("Back online.")});window.addEventListener("offline",()=>{setConnection(false);toast("You are offline.")});
 applyTheme();
-(async()=>{try{await setPersistence(auth,browserLocalPersistence);onAuthStateChanged(auth,async user=>{if(user){setBusy($("authAction"),false);await finishAuth(user);await handleJoin()}else{state.user=null;state.profile=null;clearAllListeners();showAuth("signin")}})}catch(e){showFatal("Firebase could not start. "+errText(e))}})();
+(async()=>{try{await setPersistence(auth,browserLocalPersistence);onAuthStateChanged(auth,async user=>{if(user){setBusy($("authAction"),false);await finishAuth(user);await handleJoin()}else{if(statusUnsub){statusUnsub();statusUnsub=null}state.user=null;state.profile=null;clearAllListeners();showAuth("signin")}})}catch(e){showFatal("Firebase could not start. "+errText(e))}})();

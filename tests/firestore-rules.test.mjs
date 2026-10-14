@@ -2,7 +2,7 @@ import {readFile} from "node:fs/promises";
 import {before, after, beforeEach, test} from "node:test";
 import assert from "node:assert/strict";
 import {initializeTestEnvironment, assertFails, assertSucceeds} from "@firebase/rules-unit-testing";
-import {doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp, Timestamp, writeBatch, runTransaction} from "firebase/firestore";
+import {doc, getDoc, setDoc, updateDoc, deleteDoc, arrayUnion, serverTimestamp, Timestamp, writeBatch, runTransaction} from "firebase/firestore";
 
 const projectId = "demo-qavli";
 const ownerUid = "owner-user";
@@ -152,4 +152,39 @@ test("expired invites cannot authorize a join request", async () => {
     inviteId,
     createdAt: serverTimestamp()
   }));
+});
+
+
+test("status updates can only be created for the signed-in author and within the size limit", async () => {
+  const db = env.authenticatedContext(memberUid).firestore();
+  const valid = {
+    authorId: memberUid,
+    username: "member_1",
+    displayName: "Member One",
+    avatarUrl: "",
+    text: "Hello from QAVLI",
+    createdAt: serverTimestamp(),
+    expiresAt: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000)
+  };
+  await assertSucceeds(setDoc(doc(db, "statuses", "valid-status"), valid));
+  await assertFails(setDoc(doc(db, "statuses", "impersonated-status"), {...valid, authorId: ownerUid}));
+  await assertFails(setDoc(doc(db, "statuses", "oversized-status"), {...valid, text: "x".repeat(501)}));
+});
+
+test("users can delete only their own status updates", async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), "statuses", "owner-status"), {
+      authorId: ownerUid,
+      username: "owner_1",
+      displayName: "Owner",
+      avatarUrl: "",
+      text: "Owner status",
+      createdAt: Timestamp.now(),
+      expiresAt: Timestamp.fromMillis(Date.now() + 24 * 60 * 60 * 1000)
+    });
+  });
+  const memberDb = env.authenticatedContext(memberUid).firestore();
+  await assertFails(deleteDoc(doc(memberDb, "statuses", "owner-status")));
+  const ownerDb = env.authenticatedContext(ownerUid).firestore();
+  await assertSucceeds(deleteDoc(doc(ownerDb, "statuses", "owner-status")));
 });

@@ -117,6 +117,34 @@ service cloud.firestore {
       allow delete: if isSelf(uid) && resource.data.uid == request.auth.uid;
     }
 
+    // Status updates are visible to authenticated QAVLI users and expire client-side after 24 hours.
+    // Only the author may edit or remove their own status.
+    match /statuses/{statusId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['authorId', 'username', 'displayName', 'avatarUrl', 'text', 'createdAt', 'expiresAt'])
+        && request.resource.data.username is string
+        && request.resource.data.username.size() <= 20
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 40
+        && request.resource.data.avatarUrl is string
+        && request.resource.data.avatarUrl.size() <= 2048
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1
+        && request.resource.data.text.size() <= 500
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.expiresAt is timestamp
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt <= request.time + duration.value(25, 'h');
+      allow update: if signedIn()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 500;
+      allow delete: if signedIn() && resource.data.authorId == request.auth.uid;
+    }
+
     match /chats/{chatId} {
       // Safe for deterministic DM existence checks and group invite loading.
       allow get: if signedIn() && (
