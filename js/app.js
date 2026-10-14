@@ -49,7 +49,7 @@ function showAuth(mode="signin"){$("authTitle").textContent=mode==="signup"?"Cre
 function showSetup(){screen("setup");$("username").focus()}
 const ADMIN_USERNAME="hamza0422";
 let talkAdminBusy=false;
-function setTalkAdminBusy(busy){["talkAdminAuth","talkAdminHome","talkAdminCenter"].forEach(id=>{const b=$(id);if(b){b.disabled=busy;b.setAttribute("aria-busy",String(busy));}})}
+function setTalkAdminBusy(busy){["talkAdminAuth","talkAdminHome","talkAdminCenter","talkAdminMobile"].forEach(id=>{const b=$(id);if(b){b.disabled=busy;b.setAttribute("aria-busy",String(busy));}})}
 async function talkToAdmin(){
  if(talkAdminBusy)return;
  if(!auth.currentUser){sessionStorage.setItem("qavli-talk-admin-intent","1");showAuth("signin");toast("Sign in or create your account to contact QAVLI admin.");return}
