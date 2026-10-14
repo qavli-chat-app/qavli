@@ -8,6 +8,7 @@ on:
       - main
       - qavli-pro-free-audit
       - qavli-pro-hardening
+      - qavli-pro-max-hardening-v2
   workflow_dispatch:
 
 permissions:
