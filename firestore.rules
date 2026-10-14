@@ -202,7 +202,10 @@ service cloud.firestore {
           && request.resource.data.get('replyTo', {}).get('id', '') is string
           && request.resource.data.get('replyTo', {}).get('id', '').size() <= 200
           && request.resource.data.get('replyTo', {}).get('text', '') is string
-          && request.resource.data.get('replyTo', {}).get('text', '').size() <= 200;
+          && request.resource.data.get('replyTo', {}).get('text', '').size() <= 200
+          && request.resource.data.get('readBy', {}) is map
+          && request.resource.data.get('readBy', {}).keys().hasOnly([request.auth.uid])
+          && request.resource.data.get('readBy', {}).get(request.auth.uid, null) is timestamp;
 
         allow update: if isChatMember(chatId) && (
           // Only the original sender can edit a message or soft-delete it.
