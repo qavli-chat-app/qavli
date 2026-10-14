@@ -1,6 +1,6 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,setPersistence,browserLocalPersistence,updateProfile} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,limit,orderBy,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,limit,orderBy,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig={apiKey:"AIzaSyCpRK0HE1z7iQ00WaBVbABh-RIjkqz38k8",authDomain:"qavli-37983.firebaseapp.com",projectId:"qavli-37983",storageBucket:"qavli-37983.firebasestorage.app",appId:"1:168938701514:web:783d81a63d8e4423e56a33",messagingSenderId:"168938701514"};
@@ -62,14 +62,26 @@ async function talkToAdmin(){
   const adminDoc=adminSnap.docs[0],admin={id:adminDoc.id,...adminDoc.data()};
   if(String(admin.username||"").trim().toLowerCase()!==ADMIN_USERNAME){toast("The admin account username is not configured correctly yet.");return}
   if(admin.id===state.user.uid){toast("You are signed in as the QAVLI admin account.");return}
-  const chatsSnap=await getDocs(query(collection(db,"chats"),where("members","array-contains",state.user.uid),limit(100)));
+  const chatsSnap=await getDocs(query(collection(db,"chats"),where("members","array-contains",state.user.uid),limit(500)));
   const existing=chatsSnap.docs.map(d=>({id:d.id,...d.data()})).find(c=>c.isGroup===false&&Array.isArray(c.members)&&c.members.length===2&&c.members.includes(admin.id)&&c.members.includes(state.user.uid));
+  const names={[state.user.uid]:state.profile.displayName||state.profile.username||"User",[admin.id]:admin.displayName||admin.username||"Hamza0422"};
+  const avatars={[state.user.uid]:state.profile.avatarUrl||"",[admin.id]:admin.avatarUrl||""};
   let chat=existing;
   if(!chat){
-   const names={[state.user.uid]:state.profile.displayName||state.profile.username||"User",[admin.id]:admin.displayName||admin.username||"Hamza0422"};
-   const avatars={[state.user.uid]:state.profile.avatarUrl||"",[admin.id]:admin.avatarUrl||""};
-   const ref=await addDoc(collection(db,"chats"),{isGroup:false,members:[state.user.uid,admin.id],memberNames:names,memberAvatars:avatars,createdBy:state.user.uid,lastActivityAt:serverTimestamp(),lastMessage:""});
-   chat={id:ref.id,isGroup:false,members:[state.user.uid,admin.id],memberNames:names,memberAvatars:avatars,createdBy:state.user.uid,lastMessage:""};
+   // Stable document ID prevents simultaneous taps/tabs from creating duplicate admin DMs.
+   const stableId="dm_"+[state.user.uid,admin.id].sort().join("_");
+   const stableRef=doc(db,"chats",stableId);
+   await runTransaction(db,async tx=>{
+    const snap=await tx.get(stableRef);
+    if(snap.exists()){
+     const data=snap.data();
+     if(data.isGroup!==false||!Array.isArray(data.members)||data.members.length!==2||!data.members.includes(state.user.uid)||!data.members.includes(admin.id))throw new Error("The saved admin conversation has an invalid membership list.");
+     chat={id:snap.id,...data};
+    }else{
+     const data={isGroup:false,members:[state.user.uid,admin.id],memberNames:names,memberAvatars:avatars,createdBy:state.user.uid,lastActivityAt:serverTimestamp(),lastMessage:""};
+     tx.set(stableRef,data);chat={id:stableId,...data};
+    }
+   });
   }
   sessionStorage.removeItem("qavli-talk-admin-intent");
   closeModal();await openChat(chat);toast("Opened your private chat with QAVLI admin.");
@@ -194,8 +206,50 @@ async function sendFile(file){if(!file||!state.active)return;if(file.size>15*102
 async function markVisibleRead(){if(!state.active||document.visibilityState!=="visible")return;const chatId=state.active.id;const latest=state.messages.slice(-100).filter(m=>m.senderId!==state.user.uid&&!m.readBy?.[state.user.uid]);for(const m of latest){if(state.active?.id!==chatId)return;try{await updateDoc(doc(db,"chats",chatId,"messages",m.id),{["readBy."+state.user.uid]:serverTimestamp()})}catch(e){console.warn("Could not mark message read",errText(e))}}}
 async function setTyping(on){if(!state.active)return;clearTimeout(typingTimeout);const r=doc(db,"chats",state.active.id,"typing",state.user.uid);try{if(on){await setDoc(r,{until:new Date(Date.now()+3500)});typingTimeout=setTimeout(()=>setTyping(false),2500)}else await setDoc(r,{until:new Date(0)})}catch{}}
 async function addMember(){if(!state.active?.isGroup||state.active.createdBy!==state.user.uid)return;const u=(prompt("Username to add")||"").trim().toLowerCase();if(!/^[a-z0-9_]{3,20}$/.test(u))return;try{const qs=await getDocs(query(collection(db,"users"),where("username","==",u),limit(1)));if(qs.empty)return toast("User not found.");const uid=qs.docs[0].id;if((state.active.members||[]).includes(uid))return toast("Already a member.");await updateDoc(doc(db,"chats",state.active.id),{members:arrayUnion(uid)});state.active.members=[...(state.active.members||[]),uid];toast("Member added.")}catch(e){toast(errText(e))}}
-function invite(){if(!state.active?.isGroup)return;const url=location.href.split("?")[0]+"?join="+encodeURIComponent(state.active.id);navigator.clipboard?.writeText(url).then(()=>toast("Invite link copied."),()=>prompt("Copy invite link",url))}
-async function handleJoin(){const id=new URLSearchParams(location.search).get("join");if(!id||!state.user)return;try{const s=await getDoc(doc(db,"chats",id));if(!s.exists()||!s.data().isGroup)return;await updateDoc(doc(db,"chats",id),{members:arrayUnion(state.user.uid)});history.replaceState({}, "", location.pathname);toast("Joined group.");startHomeListener()}catch(e){toast("Could not join group: "+errText(e))}}
+async function invite(){
+ if(!state.active?.isGroup||!state.user)return;
+ try{
+  const token=crypto.randomUUID();
+  await setDoc(doc(db,"groupInvites",token),{chatId:state.active.id,createdBy:state.user.uid,createdAt:serverTimestamp(),expiresAt:new Date(Date.now()+7*24*60*60*1000)});
+  const url=new URL(location.href);url.searchParams.set("join",token);
+  const link=url.toString();
+  if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(link);toast("Secure group invite copied. It expires in 7 days.");}
+  else prompt("Copy secure group invite link (expires in 7 days)",link);
+ }catch(e){toast("Could not create invite: "+errText(e))}
+}
+async function handleJoin(){
+ const token=new URLSearchParams(location.search).get("join");
+ if(!token||!state.user)return;
+ try{
+  const inviteRef=doc(db,"groupInvites",token),inviteSnap=await getDoc(inviteRef);
+  if(!inviteSnap.exists())throw new Error("This group invite is invalid or expired.");
+  const inviteData=inviteSnap.data();
+  if(!inviteData.chatId||!inviteData.expiresAt?.toDate||inviteData.expiresAt.toDate().getTime()<=Date.now())throw new Error("This group invite is invalid or expired.");
+  const chatRef=doc(db,"chats",inviteData.chatId),chatSnap=await getDoc(chatRef);
+  if(!chatSnap.exists()||chatSnap.data().isGroup!==true)throw new Error("This group is no longer available.");
+  if((chatSnap.data().members||[]).includes(state.user.uid)){
+   history.replaceState({}, "", location.pathname);toast("You are already a member of this group.");return;
+  }
+  const requestRef=doc(db,"groupJoinRequests",state.user.uid);
+  try{await deleteDoc(requestRef)}catch{}
+  await setDoc(requestRef,{chatId:inviteData.chatId,uid:state.user.uid,inviteId:token,createdAt:serverTimestamp()});
+  await runTransaction(db,async tx=>{
+   const freshInvite=await tx.get(inviteRef),freshChat=await tx.get(chatRef),joinRequest=await tx.get(requestRef);
+   if(!freshInvite.exists()||!freshChat.exists()||!joinRequest.exists())throw new Error("This group invite is no longer valid.");
+   const iv=freshInvite.data(),group=freshChat.data(),request=joinRequest.data();
+   if(iv.chatId!==inviteData.chatId||!iv.expiresAt?.toDate||iv.expiresAt.toDate().getTime()<=Date.now())throw new Error("This group invite is invalid or expired.");
+   if(request.uid!==state.user.uid||request.chatId!==inviteData.chatId||request.inviteId!==token)throw new Error("Group invitation validation failed.");
+   const members=Array.isArray(group.members)?group.members:[];
+   if(group.isGroup!==true)throw new Error("This group is no longer available.");
+   if(!members.includes(state.user.uid))tx.update(chatRef,{members:[...members,state.user.uid]});
+   tx.delete(requestRef);
+  });
+  history.replaceState({}, "", location.pathname);toast("Joined group successfully.");startHomeListener();
+ }catch(e){
+  try{await deleteDoc(doc(db,"groupJoinRequests",state.user.uid))}catch{}
+  toast("Could not join group: "+errText(e));
+ }
+}
 function updateCount(){$("count").textContent=$("messageInput").value.length+" / 2000"}
 function applyTheme(){document.body.classList.toggle("dark",state.theme==="dark");$("themeBtn").textContent=state.theme==="dark"?"☀":"◐";localStorage.setItem("qavli-theme",state.theme)}
 function profileEdit(){openModal("profileModal");$("profileName").value=state.profile.displayName||"";$("profileModalName").textContent=state.profile.displayName||"Profile";$("profileModalUsername").textContent=state.profile.username?"@"+state.profile.username:"";const av=$("profileAvatar");av.innerHTML=state.profile.avatarUrl?'<img src="'+state.profile.avatarUrl.replace(/"/g,"&quot;")+'" alt="">':initials(state.profile.displayName)}
