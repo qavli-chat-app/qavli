@@ -144,7 +144,7 @@ async function hydrateChat(c){const others=(c.members||[]).filter(x=>x!==state.u
 async function hydrateChatList(){const visible=state.chats.filter(c=>chatTitle(c).toLowerCase().includes(state.search.toLowerCase()));await Promise.all(visible.map(hydrateChat));renderChats();}
 async function finishAuth(user){state.user=user;try{state.profile=await loadProfile(user);if(!state.profile){showSetup();return}$("homeGreeting").textContent="Welcome, "+(state.profile.displayName||state.profile.username||"there");$("profileBtn").title=state.profile.displayName||"Profile";setConnection(navigator.onLine);startHomeListener();showHome();clearTimeout(window.qavliBootTimer);setTimeout(resumeTalkAdminIntent,0);setDoc(doc(db,"users",user.uid),{online:true,lastSeen:serverTimestamp()},{merge:true}).catch(e=>console.warn("Presence update deferred",e));}catch(e){showFatal("Your account signed in, but QAVLI could not load your profile. "+errText(e))}}
 function showFatal(msg){screen("fatal");$("fatalText").textContent=msg}
-async function signOutUser(){
+async function signOutUser(){if(statusUnsub){statusUnsub();statusUnsub=null}
  const user=state.user;
  try{
   if(user)await updateDoc(doc(db,"users",user.uid),{online:false,lastSeen:serverTimestamp()});
@@ -337,4 +337,4 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data?.type==="QAVLI_OPEN_CHAT"&&e.data.chatId){const c=state.chats.find(x=>x.id===e.data.chatId);if(c)openChat(c)}})}
 window.addEventListener("online",()=>{setConnection(true);if(state.user)toast("Back online.")});window.addEventListener("offline",()=>{setConnection(false);toast("You are offline.")});
 applyTheme();
-(async()=>{try{await setPersistence(auth,browserLocalPersistence);onAuthStateChanged(auth,async user=>{if(user){setBusy($("authAction"),false);await finishAuth(user);await handleJoin()}else{state.user=null;state.profile=null;clearAllListeners();showAuth("signin")}})}catch(e){showFatal("Firebase could not start. "+errText(e))}})();
+(async()=>{try{await setPersistence(auth,browserLocalPersistence);onAuthStateChanged(auth,async user=>{if(user){setBusy($("authAction"),false);await finishAuth(user);await handleJoin()}else{if(statusUnsub){statusUnsub();statusUnsub=null}state.user=null;state.profile=null;clearAllListeners();showAuth("signin")}})}catch(e){showFatal("Firebase could not start. "+errText(e))}})();
