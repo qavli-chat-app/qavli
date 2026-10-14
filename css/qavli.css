@@ -645,3 +645,54 @@ body.dark #home .talk-admin-center{border-color:rgba(255,219,133,.82);box-shadow
 
 /* Hide the older grey admin CTA; keep the premium gold mobile CTA and desktop center CTA. */
 #home .talk-admin-home{display:none!important}
+
+
+/* QAVLI Premium Refresh — purple identity with restrained gold accents. */
+:root{
+  --navy:#241044;--navy2:#482080;--gold:#e9bd65;--bg:#f7f4fc;--surface:#fff;
+  --text:#211633;--muted:#81758f;--line:#e8e0f1;--soft:#f0e9f8;--mine:#eee1ff;
+  --danger:#c84b66;--shadow:0 18px 48px rgba(49,20,83,.12)
+}
+body{background:var(--bg);color:var(--text)}
+.auth{background:radial-gradient(circle at 12% 8%,rgba(158,76,255,.16),transparent 32%),radial-gradient(circle at 88% 92%,rgba(233,189,101,.13),transparent 28%),linear-gradient(150deg,#fbf9ff,#f1eafa)}
+.auth-card{border-color:rgba(255,255,255,.92);box-shadow:0 24px 70px rgba(56,23,92,.14)}
+.mark{background:linear-gradient(145deg,#b36cff,#7029c8 72%,#4b168c);color:#fff;box-shadow:0 14px 28px rgba(112,41,200,.25);border:1px solid rgba(255,255,255,.24)}
+.eyebrow{color:#8755b8}
+.field{border-color:#e7dcef;background:#fff;color:#241638}
+.field:focus{border-color:#9854df;box-shadow:0 0 0 4px rgba(152,84,223,.12)}
+.primary{background:linear-gradient(125deg,#9b4be7,#6720b6 70%,#4a1689);box-shadow:0 10px 24px rgba(103,32,182,.22)}
+.secondary{border-color:#e4d7f0;color:#6326a2;background:rgba(255,255,255,.9)}
+.link{color:#7029b8}
+.topbar{background:linear-gradient(120deg,#31124f,#6425a7 72%,#7f32c9);box-shadow:0 6px 22px rgba(49,18,79,.14)}
+.brand-mini .mini{background:linear-gradient(145deg,#f8dda0,#e4b34d);color:#31124f;box-shadow:0 5px 14px rgba(0,0,0,.13)}
+.icon-btn{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.12)}
+.sidebar{background:rgba(255,255,255,.96);border-right-color:#e8def1}
+.section-head h2{color:#2c1743}
+.search .field{border-radius:18px;background:#f7f3fb;border-color:transparent}
+.filter-chip{border-color:#e6d9f1;color:#6d5b7c;background:#fff}
+.filter-chip.active,.filter-chip[aria-pressed="true"]{background:#f0e3ff;border-color:#b984ed;color:#6320a8}
+.chat-item,.chat-row,.conversation-item{border-radius:18px}
+.chat-item:hover,.chat-row:hover,.conversation-item:hover{background:#f7f1ff}
+.unread-badge,.unread-count{background:#7d2bc1;color:#fff}
+.main{background:linear-gradient(145deg,#faf8fd,#f4eefb)}
+.chat-top{background:rgba(255,255,255,.94);border-bottom-color:#e9e0f1}
+.messages{background:radial-gradient(circle at 100% 0%,rgba(164,105,222,.06),transparent 34%),#fbf9fd}
+.message.mine,.message.outgoing,.bubble.mine{background:linear-gradient(135deg,#8f3bd2,#6421a9);color:#fff;border-color:transparent}
+.composer{background:rgba(255,255,255,.96);border-color:#e8dff0}
+.composer .field{background:#f7f3fb;border-color:transparent}
+.send,.attach{border-radius:15px}
+.bottom-nav{background:rgba(255,255,255,.97);border-top-color:#e9e0f1}
+.bottom-nav-item{color:#877791}
+.bottom-nav-item.active{color:#7226b5;background:#f2e6ff;border-radius:16px}
+.bottom-nav-item.active span{color:#7226b5}
+.modal{border-color:#e8d9f3;box-shadow:0 24px 80px rgba(37,12,63,.22)}
+.connection i{background:#25c47a}
+button:focus-visible,input:focus-visible{outline-color:rgba(152,84,223,.55)}
+@media(max-width:820px){
+  .topbar{background:linear-gradient(120deg,#31124f,#6425a7 72%,#7f32c9)}
+  .sidebar{background:#fff}
+  .sidebar-body{background:linear-gradient(180deg,#fff 0%,#fcf9ff 100%)}
+  .bottom-nav{padding-bottom:max(8px,env(safe-area-inset-bottom))}
+  .bottom-nav-item.active{box-shadow:inset 0 0 0 1px rgba(126,43,193,.08)}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
