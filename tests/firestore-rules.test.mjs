@@ -95,6 +95,28 @@ test("a non-member cannot mint an invite for a group they do not belong to", asy
 });
 
 
+
+test("new messages cannot forge read receipts for other users", async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await updateDoc(doc(context.firestore(), "chats", groupId), {members: [ownerUid, memberUid]});
+  });
+  const db = env.authenticatedContext(memberUid).firestore();
+  const ownReceipt = {
+    senderId: memberUid,
+    text: "Own receipt",
+    createdAt: serverTimestamp(),
+    readBy: {[memberUid]: serverTimestamp()}
+  };
+  await assertSucceeds(setDoc(doc(db, "chats", groupId, "messages", "own-receipt"), ownReceipt));
+  const forgedReceipt = {
+    senderId: memberUid,
+    text: "Forged receipt",
+    createdAt: serverTimestamp(),
+    readBy: {[memberUid]: serverTimestamp(), [ownerUid]: serverTimestamp()}
+  };
+  await assertFails(setDoc(doc(db, "chats", groupId, "messages", "forged-receipt"), forgedReceipt));
+});
+
 test("read receipts can only be changed for the authenticated reader", async () => {
   const messageId = "message-one";
   await env.withSecurityRulesDisabled(async context => {
