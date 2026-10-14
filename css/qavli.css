@@ -642,3 +642,6 @@ body.dark #home .talk-admin-center{border-color:rgba(255,219,133,.82);box-shadow
 @media(min-width:821px){#home .talk-admin-mobile,#home .talk-admin-mobile-note{display:none}}
 @media(max-width:480px){#home .talk-admin-mobile{min-height:78px;padding:13px 14px;gap:11px;border-radius:21px}#home .talk-admin-mobile .talk-admin-center-icon{flex-basis:42px;width:42px;height:42px;border-radius:14px}#home .talk-admin-mobile .talk-admin-center-copy strong{font-size:16px}#home .talk-admin-mobile .talk-admin-center-copy small{font-size:9px;letter-spacing:.035em}#home .talk-admin-mobile .talk-admin-center-arrow{flex-basis:29px;width:29px;height:29px}}
 @media(prefers-reduced-motion:reduce){#home .talk-admin-mobile,#home .talk-admin-mobile:after{transition:none}}
+
+/* Hide the older grey admin CTA; keep the premium gold mobile CTA and desktop center CTA. */
+#home .talk-admin-home{display:none!important}
