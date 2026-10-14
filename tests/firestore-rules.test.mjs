@@ -94,6 +94,25 @@ test("a non-member cannot mint an invite for a group they do not belong to", asy
   }));
 });
 
+
+test("read receipts can only be changed for the authenticated reader", async () => {
+  const messageId = "message-one";
+  await env.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    await updateDoc(doc(db, "chats", groupId), {members: [ownerUid, memberUid]});
+    await setDoc(doc(db, "chats", groupId, "messages", messageId), {
+      senderId: ownerUid,
+      text: "Hello",
+      createdAt: Timestamp.now(),
+      readBy: {[ownerUid]: Timestamp.now()}
+    });
+  });
+  const db = env.authenticatedContext(memberUid).firestore();
+  const messageRef = doc(db, "chats", groupId, "messages", messageId);
+  await assertSucceeds(updateDoc(messageRef, {["readBy." + memberUid]: serverTimestamp()}));
+  await assertFails(updateDoc(messageRef, {["readBy." + ownerUid]: serverTimestamp()}));
+});
+
 test("expired invites cannot authorize a join request", async () => {
   const inviteId = "expired-token";
   await env.withSecurityRulesDisabled(async context => {
