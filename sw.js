@@ -1,4 +1,4 @@
-const CACHE="qavli-rebuild-v25";
+const CACHE="qavli-rebuild-v26";
 const SHELL=["./","./index.html","./manifest.json","./icon.svg","./icon-192.svg","./icon-512.svg","./css/qavli.css","./js/app.js"];
 const SHELL_PATHS=new Set(SHELL.map(path=>new URL(path,self.location.href).pathname));
 self.addEventListener("install",event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)))});
