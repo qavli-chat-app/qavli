@@ -847,3 +847,6 @@ button:disabled{opacity:.58;cursor:not-allowed}
 body:not(.dark) .chat-row.has-unread{background:linear-gradient(110deg,#eee3ff,#faf6ff)!important;border-color:#b99ae7!important}
 body:not(.dark) .chat-row.has-unread .chat-copy small{color:#5d358a!important}
 body:not(.dark) .chat-row-unread-count{color:#fff!important}
+
+/* QAVLI flicker fix: message rows are frequently re-rendered by realtime read receipts. Keep existing bubbles visually stable. */
+#chat .messages .bubble{animation:none!important;}
