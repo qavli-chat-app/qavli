@@ -205,18 +205,29 @@ service cloud.firestore {
           && request.resource.data.get('replyTo', {}).get('text', '').size() <= 200;
 
         allow update: if isChatMember(chatId) && (
-          // Only the original sender can edit/soft-delete their message.
+          // Only the original sender can edit a message or soft-delete it.
           (resource.data.senderId == request.auth.uid
             && request.resource.data.senderId == resource.data.senderId
-            && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['text', 'edited', 'deleted'])
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'edited'])
+            && request.resource.data.edited == true
             && validText('text', 2000))
           ||
-          // Members may update reaction/read-receipt metadata only.
-          (request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['reaction', 'readBy'])
+          (resource.data.senderId == request.auth.uid
+            && request.resource.data.senderId == resource.data.senderId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'deleted'])
+            && request.resource.data.deleted == true
+            && request.resource.data.text == '')
+          ||
+          // A reaction is a single bounded string.
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reaction'])
             && request.resource.data.get('reaction', '') is string
             && request.resource.data.get('reaction', '').size() <= 16)
+          ||
+          // Read receipts may be written only for the authenticated reader.
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+            && request.resource.data.get('readBy', {}) is map
+            && request.resource.data.get('readBy', {}).diff(resource.data.get('readBy', {})).affectedKeys().hasOnly([request.auth.uid])
+            && request.resource.data.get('readBy', {}).get(request.auth.uid, null) is timestamp)
         );
 
         allow delete: if false;
