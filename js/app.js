@@ -1,6 +1,6 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {getAuth,onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,sendPasswordResetEmail,signOut,setPersistence,browserLocalPersistence,updateProfile} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,collection,query,where,limit,orderBy,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getFirestore,doc,getDoc,getDocs,setDoc,addDoc,updateDoc,deleteDoc,collection,query,where,limit,orderBy,onSnapshot,serverTimestamp,arrayUnion,runTransaction} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {getStorage,ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig={apiKey:"AIzaSyCpRK0HE1z7iQ00WaBVbABh-RIjkqz38k8",authDomain:"qavli-37983.firebaseapp.com",projectId:"qavli-37983",storageBucket:"qavli-37983.firebasestorage.app",appId:"1:168938701514:web:783d81a63d8e4423e56a33",messagingSenderId:"168938701514"};
@@ -47,6 +47,49 @@ function clearAllListeners(){state.unsubs.forEach(fn=>{try{fn()}catch{}});state.
 function clearChatListeners(){while(state.unsubs.length>1){const fn=state.unsubs.pop();try{fn()}catch{}}}
 function showAuth(mode="signin"){$("authTitle").textContent=mode==="signup"?"Create your QAVLI account":"Welcome back";$("authSub").textContent=mode==="signup"?"Create your account using the existing QAVLI Firebase service.":"Sign in to continue to your private conversations.";$("authAction").textContent=mode==="signup"?"Create account":"Sign in";$("authSwitch").textContent=mode==="signup"?"Already have an account? Sign in":"New to QAVLI? Create account";$("authForm").dataset.mode=mode;screen("auth");$("email").focus()}
 function showSetup(){screen("setup");$("username").focus()}
+const ADMIN_USERNAME="hamza0422";
+let talkAdminBusy=false;
+function setTalkAdminBusy(busy){["talkAdminAuth","talkAdminHome","talkAdminCenter"].forEach(id=>{const b=$(id);if(b){b.disabled=busy;b.setAttribute("aria-busy",String(busy));}})}
+async function talkToAdmin(){
+ if(talkAdminBusy)return;
+ if(!auth.currentUser){sessionStorage.setItem("qavli-talk-admin-intent","1");showAuth("signin");toast("Sign in or create your account to contact QAVLI admin.");return}
+ if(!state.profile){sessionStorage.setItem("qavli-talk-admin-intent","1");showSetup();return}
+ talkAdminBusy=true;setTalkAdminBusy(true);
+ try{
+  const adminSnap=await getDocs(query(collection(db,"users"),where("username","==",ADMIN_USERNAME),limit(2)));
+  if(adminSnap.empty){toast("Admin account @Hamza0422 was not found. Please ask the app owner to verify the account username.");return}
+  if(adminSnap.size!==1){toast("Admin account lookup is ambiguous. Please contact the app owner.");return}
+  const adminDoc=adminSnap.docs[0],admin={id:adminDoc.id,...adminDoc.data()};
+  if(String(admin.username||"").trim().toLowerCase()!==ADMIN_USERNAME){toast("The admin account username is not configured correctly yet.");return}
+  if(admin.id===state.user.uid){toast("You are signed in as the QAVLI admin account.");return}
+  const chatsSnap=await getDocs(query(collection(db,"chats"),where("members","array-contains",state.user.uid),limit(500)));
+  const existing=chatsSnap.docs.map(d=>({id:d.id,...d.data()})).find(c=>c.isGroup===false&&Array.isArray(c.members)&&c.members.length===2&&c.members.includes(admin.id)&&c.members.includes(state.user.uid));
+  const names={[state.user.uid]:state.profile.displayName||state.profile.username||"User",[admin.id]:admin.displayName||admin.username||"Hamza0422"};
+  const avatars={[state.user.uid]:state.profile.avatarUrl||"",[admin.id]:admin.avatarUrl||""};
+  let chat=existing;
+  if(!chat){
+   // Stable document ID prevents simultaneous taps/tabs from creating duplicate admin DMs.
+   const stableId="dm_"+[state.user.uid,admin.id].sort().join("_");
+   const stableRef=doc(db,"chats",stableId);
+   await runTransaction(db,async tx=>{
+    const snap=await tx.get(stableRef);
+    if(snap.exists()){
+     const data=snap.data();
+     if(data.isGroup!==false||!Array.isArray(data.members)||data.members.length!==2||!data.members.includes(state.user.uid)||!data.members.includes(admin.id))throw new Error("The saved admin conversation has an invalid membership list.");
+     chat={id:snap.id,...data};
+    }else{
+     const data={isGroup:false,members:[state.user.uid,admin.id],memberNames:names,memberAvatars:avatars,createdBy:state.user.uid,lastActivityAt:serverTimestamp(),lastMessage:""};
+     tx.set(stableRef,data);chat={id:stableId,...data};
+    }
+   });
+  }
+  sessionStorage.removeItem("qavli-talk-admin-intent");
+  closeModal();await openChat(chat);toast("Opened your private chat with QAVLI admin.");
+ }catch(e){toast("Could not open the admin chat: "+errText(e))}
+ finally{talkAdminBusy=false;setTalkAdminBusy(false)}
+}
+function resumeTalkAdminIntent(){if(sessionStorage.getItem("qavli-talk-admin-intent")==="1"&&auth.currentUser&&state.profile)talkToAdmin()}
+
 function showHome(){screen("home");renderChats()}
 function showChat(){screen("chat");document.querySelector("#chat .app-shell").classList.add("chat-open")}
 function closeChat(){clearChatListeners();state.active=null;state.messages=[];document.querySelector("#chat .app-shell").classList.remove("chat-open");showHome()}
@@ -55,11 +98,21 @@ async function loadProfile(user){const snap=await getDoc(doc(db,"users",user.uid
 async function getUserProfile(uid){if(!uid)return null;if(profileCache.has(uid))return profileCache.get(uid);try{const snap=await getDoc(doc(db,"users",uid));const p=snap.exists()?{id:snap.id,...snap.data()}:null;if(p)profileCache.set(uid,p);return p}catch{return null}}
 async function hydrateChat(c){const others=(c.members||[]).filter(x=>x!==state.user?.uid);if(!c.memberNames)c.memberNames={};if(!c.memberAvatars)c.memberAvatars={};await Promise.all(others.map(async uid=>{let p=profileCache.get(uid);if(!p)p=await getUserProfile(uid);if(p){c.memberNames[uid]=p.displayName||p.username||"User";c.memberAvatars[uid]=p.avatarUrl||""}}));if(c.isGroup&&state.active?.id===c.id){state.active.memberNames={...(state.active.memberNames||{}),...c.memberNames};state.active.memberAvatars={...(state.active.memberAvatars||{}),...c.memberAvatars};renderMessages()}return c}
 async function hydrateChatList(){const visible=state.chats.filter(c=>chatTitle(c).toLowerCase().includes(state.search.toLowerCase()));await Promise.all(visible.map(hydrateChat));renderChats();}
-async function finishAuth(user){state.user=user;try{state.profile=await loadProfile(user);if(!state.profile){showSetup();return}$("homeGreeting").textContent="Welcome, "+(state.profile.displayName||state.profile.username||"there");$("profileBtn").title=state.profile.displayName||"Profile";setConnection(navigator.onLine);startHomeListener();showHome();clearTimeout(window.qavliBootTimer);setDoc(doc(db,"users",user.uid),{online:true,lastSeen:serverTimestamp()},{merge:true}).catch(e=>console.warn("Presence update deferred",e));}catch(e){showFatal("Your account signed in, but QAVLI could not load your profile. "+errText(e))}}
+async function finishAuth(user){state.user=user;try{state.profile=await loadProfile(user);if(!state.profile){showSetup();return}$("homeGreeting").textContent="Welcome, "+(state.profile.displayName||state.profile.username||"there");$("profileBtn").title=state.profile.displayName||"Profile";setConnection(navigator.onLine);startHomeListener();showHome();clearTimeout(window.qavliBootTimer);setTimeout(resumeTalkAdminIntent,0);setDoc(doc(db,"users",user.uid),{online:true,lastSeen:serverTimestamp()},{merge:true}).catch(e=>console.warn("Presence update deferred",e));}catch(e){showFatal("Your account signed in, but QAVLI could not load your profile. "+errText(e))}}
 function showFatal(msg){screen("fatal");$("fatalText").textContent=msg}
+async function signOutUser(){
+ const user=state.user;
+ try{
+  if(user)await updateDoc(doc(db,"users",user.uid),{online:false,lastSeen:serverTimestamp()});
+  await signOut(auth);
+ }catch(e){
+  toast("Could not update sign-out status: "+errText(e));
+  try{await signOut(auth)}catch{}
+ }
+}
 async function signIn(){const email=$("email").value.trim(),pw=$("password").value;if(!email||!pw)return $("authError").textContent="Enter your email and password.";const b=$("authAction");$("authError").textContent="";setBusy(b,true,"Signing in…");try{await setPersistence(auth,browserLocalPersistence);await signInWithEmailAndPassword(auth,email,pw)}catch(e){$("authError").textContent=errText(e);setBusy(b,false)}}
 async function signUp(){const email=$("email").value.trim(),pw=$("password").value,b=$("authAction");$("authError").textContent="";if(!email){$("authError").textContent="Enter your email address.";return $("email").focus()}if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $("authError").textContent="Enter a valid email address.";return $("email").focus()}if(pw.length<6){$("authError").textContent="Your password must be at least 6 characters.";return $("password").focus()}setBusy(b,true,"Creating account…");try{await setPersistence(auth,browserLocalPersistence);await createUserWithEmailAndPassword(auth,email,pw);$("authError").textContent="";}catch(e){console.error("QAVLI signup failed:",e?.code||e);$("authError").textContent=errText(e);setBusy(b,false)}}
-async function saveProfile(){const u=$("username").value.trim().toLowerCase(),d=$("displayName").value.trim();if(!/^[a-z0-9_]{3,20}$/.test(u))return $("setupError").textContent="Username must be 3–20 characters: a-z, 0-9 or _.";if(!d||d.length>40)return $("setupError").textContent="Enter a display name up to 40 characters.";const b=$("saveProfile");$("setupError").textContent="";setBusy(b,true,"Saving…");try{const user=state.user;await runTransaction(db,async tx=>{const existing=await tx.get(doc(db,"usernames",u));if(existing.exists()&&existing.data().uid!==user.uid)throw new Error("USERNAME_TAKEN");tx.set(doc(db,"usernames",u),{uid:user.uid,createdAt:serverTimestamp()});tx.set(doc(db,"users",user.uid),{username:u,displayName:d,online:true,lastSeen:serverTimestamp()},{merge:true})});await updateProfile(user,{displayName:d});state.profile=await loadProfile(user);startHomeListener();showHome();toast("Profile ready.");}catch(e){$("setupError").textContent=e.message==="USERNAME_TAKEN"?"That username is already taken.":errText(e);setBusy(b,false)}}
+async function saveProfile(){const u=$("username").value.trim().toLowerCase(),d=$("displayName").value.trim();if(!/^[a-z0-9_]{3,20}$/.test(u))return $("setupError").textContent="Username must be 3–20 characters: a-z, 0-9 or _.";if(!d||d.length>40)return $("setupError").textContent="Enter a display name up to 40 characters.";const b=$("saveProfile");$("setupError").textContent="";setBusy(b,true,"Saving…");try{const user=state.user;await runTransaction(db,async tx=>{const existing=await tx.get(doc(db,"usernames",u));if(existing.exists()&&existing.data().uid!==user.uid)throw new Error("USERNAME_TAKEN");if(!existing.exists())tx.set(doc(db,"usernames",u),{uid:user.uid,createdAt:serverTimestamp()});tx.set(doc(db,"users",user.uid),{username:u,displayName:d,online:true,lastSeen:serverTimestamp()},{merge:true})});await updateProfile(user,{displayName:d});state.profile=await loadProfile(user);startHomeListener();showHome();toast("Profile ready.");setTimeout(resumeTalkAdminIntent,0);}catch(e){$("setupError").textContent=e.message==="USERNAME_TAKEN"?"That username is already taken.":errText(e);setBusy(b,false)}}
 async function resetPassword(){const email=$("email").value.trim();if(!email)return $("authError").textContent="Enter your email first.";try{await sendPasswordResetEmail(auth,email);toast("Password reset email sent.");}catch(e){$("authError").textContent=errText(e)}}
 
 function syncUnreadListeners(chats){
@@ -81,7 +134,13 @@ function syncUnreadListeners(chats){
  }
 }
 function startHomeListener(){clearAllListeners();let firstSnapshot=true;const q=query(collection(db,"chats"),where("members","array-contains",state.user.uid),limit(80));const unsub=onSnapshot(q,snap=>{const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.lastActivityAt?.toMillis?.()||0)-(a.lastActivityAt?.toMillis?.()||0));firstSnapshot=false;state.chats=next;syncUnreadListeners(next);renderChats();clearTimeout(window.qavliBootTimer)},e=>{toast("Could not load chats: "+errText(e));renderChatsError(e)});state.unsubs=[unsub]}
-function renderChatsError(e){$("chatList").innerHTML='<div class="empty-card" style="padding:25px"><b>Could not load conversations.</b><p>'+errText(e)+'</p></div>'}
+function renderChatsError(e){
+ const list=$("chatList");list.innerHTML="";
+ const card=document.createElement("div");card.className="empty-card";card.style.padding="25px";
+ const title=document.createElement("b");title.textContent="Could not load conversations.";
+ const detail=document.createElement("p");detail.textContent=errText(e);
+ card.append(title,detail);list.append(card);
+}
 function chatTitle(c){if(c.isGroup)return c.name||"Group";const other=(c.members||[]).find(x=>x!==state.user.uid);return c.memberNames?.[other]||c.names?.[other]||profileCache.get(other)?.displayName||profileCache.get(other)?.username||"Loading member…"}
 function chatProfile(c){if(c.isGroup)return{displayName:c.name||"Group"};const other=(c.members||[]).find(x=>x!==state.user.uid),p=profileCache.get(other);return{displayName:c.memberNames?.[other]||c.names?.[other]||p?.displayName||p?.username||"Loading member…",avatarUrl:c.memberAvatars?.[other]||p?.avatarUrl||""}}
 function chatUnreadCount(c){return Math.max(0,unreadCounts.get(c.id)||0)}
@@ -146,7 +205,7 @@ async function searchUsers(){
     });
   }catch(e){
     if(req!==userSearchRequest)return;
-    box.innerHTML='<div class="user-search-empty">Search failed. '+errText(e)+'</div>';
+    box.textContent="Search failed. "+errText(e);box.className="user-search-empty";
   }
 }
 async function newChat(){const u=($("newChatUser").value||"").trim().toLowerCase();$("newChatError").textContent="";if(!/^[a-z0-9_]{3,20}$/.test(u))return $("newChatError").textContent="Enter a valid username.";try{const qs=await getDocs(query(collection(db,"users"),where("username","==",u),limit(1)));if(qs.empty)return $("newChatError").textContent="User not found.";const other=qs.docs[0];if(other.id===state.user.uid)return $("newChatError").textContent="You cannot start a chat with yourself.";const existing=state.chats.find(c=>!c.isGroup&&c.members?.length===2&&c.members.includes(other.id));if(existing){closeModal();return openChat(existing)}const otherData=other.data(),names={[state.user.uid]:state.profile.displayName,[other.id]:otherData.displayName||u},avatars={[state.user.uid]:state.profile.avatarUrl||"",[other.id]:otherData.avatarUrl||""};const ref=await addDoc(collection(db,"chats"),{isGroup:false,members:[state.user.uid,other.id],memberNames:names,memberAvatars:avatars,createdBy:state.user.uid,lastActivityAt:serverTimestamp(),lastMessage:""});closeModal();$("newChatUser").value="";openChat({id:ref.id,isGroup:false,members:[state.user.uid,other.id],memberNames:names,memberAvatars:avatars,lastMessage:""})}catch(e){$("newChatError").textContent=errText(e)}}
@@ -163,16 +222,59 @@ async function sendFile(file){if(!file||!state.active)return;if(file.size>15*102
 async function markVisibleRead(){if(!state.active||document.visibilityState!=="visible")return;const chatId=state.active.id;const latest=state.messages.slice(-100).filter(m=>m.senderId!==state.user.uid&&!m.readBy?.[state.user.uid]);for(const m of latest){if(state.active?.id!==chatId)return;try{await updateDoc(doc(db,"chats",chatId,"messages",m.id),{["readBy."+state.user.uid]:serverTimestamp()})}catch(e){console.warn("Could not mark message read",errText(e))}}}
 async function setTyping(on){if(!state.active)return;clearTimeout(typingTimeout);const r=doc(db,"chats",state.active.id,"typing",state.user.uid);try{if(on){await setDoc(r,{until:new Date(Date.now()+3500)});typingTimeout=setTimeout(()=>setTyping(false),2500)}else await setDoc(r,{until:new Date(0)})}catch{}}
 async function addMember(){if(!state.active?.isGroup||state.active.createdBy!==state.user.uid)return;const u=(prompt("Username to add")||"").trim().toLowerCase();if(!/^[a-z0-9_]{3,20}$/.test(u))return;try{const qs=await getDocs(query(collection(db,"users"),where("username","==",u),limit(1)));if(qs.empty)return toast("User not found.");const uid=qs.docs[0].id;if((state.active.members||[]).includes(uid))return toast("Already a member.");await updateDoc(doc(db,"chats",state.active.id),{members:arrayUnion(uid)});state.active.members=[...(state.active.members||[]),uid];toast("Member added.")}catch(e){toast(errText(e))}}
-function invite(){if(!state.active?.isGroup)return;const url=location.href.split("?")[0]+"?join="+encodeURIComponent(state.active.id);navigator.clipboard?.writeText(url).then(()=>toast("Invite link copied."),()=>prompt("Copy invite link",url))}
-async function handleJoin(){const id=new URLSearchParams(location.search).get("join");if(!id||!state.user)return;try{const s=await getDoc(doc(db,"chats",id));if(!s.exists()||!s.data().isGroup)return;await updateDoc(doc(db,"chats",id),{members:arrayUnion(state.user.uid)});history.replaceState({}, "", location.pathname);toast("Joined group.");startHomeListener()}catch(e){toast("Could not join group: "+errText(e))}}
+async function invite(){
+ if(!state.active?.isGroup||!state.user)return;
+ try{
+  const token=crypto.randomUUID();
+  await setDoc(doc(db,"groupInvites",token),{chatId:state.active.id,createdBy:state.user.uid,createdAt:serverTimestamp(),expiresAt:new Date(Date.now()+7*24*60*60*1000)});
+  const url=new URL(location.href);url.searchParams.set("join",token);
+  const link=url.toString();
+  if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(link);toast("Secure group invite copied. It expires in 7 days.");}
+  else prompt("Copy secure group invite link (expires in 7 days)",link);
+ }catch(e){toast("Could not create invite: "+errText(e))}
+}
+async function handleJoin(){
+ const token=new URLSearchParams(location.search).get("join");
+ if(!token||!state.user)return;
+ try{
+  const inviteRef=doc(db,"groupInvites",token),inviteSnap=await getDoc(inviteRef);
+  if(!inviteSnap.exists())throw new Error("This group invite is invalid or expired.");
+  const inviteData=inviteSnap.data();
+  if(!inviteData.chatId||!inviteData.expiresAt?.toDate||inviteData.expiresAt.toDate().getTime()<=Date.now())throw new Error("This group invite is invalid or expired.");
+  const chatRef=doc(db,"chats",inviteData.chatId),chatSnap=await getDoc(chatRef);
+  if(!chatSnap.exists()||chatSnap.data().isGroup!==true)throw new Error("This group is no longer available.");
+  if((chatSnap.data().members||[]).includes(state.user.uid)){
+   history.replaceState({}, "", location.pathname);toast("You are already a member of this group.");return;
+  }
+  const requestRef=doc(db,"groupJoinRequests",state.user.uid);
+  try{await deleteDoc(requestRef)}catch{}
+  await setDoc(requestRef,{chatId:inviteData.chatId,uid:state.user.uid,inviteId:token,createdAt:serverTimestamp()});
+  await runTransaction(db,async tx=>{
+   const freshInvite=await tx.get(inviteRef),freshChat=await tx.get(chatRef),joinRequest=await tx.get(requestRef);
+   if(!freshInvite.exists()||!freshChat.exists()||!joinRequest.exists())throw new Error("This group invite is no longer valid.");
+   const iv=freshInvite.data(),group=freshChat.data(),request=joinRequest.data();
+   if(iv.chatId!==inviteData.chatId||!iv.expiresAt?.toDate||iv.expiresAt.toDate().getTime()<=Date.now())throw new Error("This group invite is invalid or expired.");
+   if(request.uid!==state.user.uid||request.chatId!==inviteData.chatId||request.inviteId!==token)throw new Error("Group invitation validation failed.");
+   const members=Array.isArray(group.members)?group.members:[];
+   if(group.isGroup!==true)throw new Error("This group is no longer available.");
+   if(!members.includes(state.user.uid))tx.update(chatRef,{members:[...members,state.user.uid]});
+   tx.delete(requestRef);
+  });
+  history.replaceState({}, "", location.pathname);toast("Joined group successfully.");startHomeListener();
+ }catch(e){
+  try{await deleteDoc(doc(db,"groupJoinRequests",state.user.uid))}catch{}
+  toast("Could not join group: "+errText(e));
+ }
+}
 function updateCount(){$("count").textContent=$("messageInput").value.length+" / 2000"}
 function applyTheme(){document.body.classList.toggle("dark",state.theme==="dark");$("themeBtn").textContent=state.theme==="dark"?"☀":"◐";localStorage.setItem("qavli-theme",state.theme)}
 function profileEdit(){openModal("profileModal");$("profileName").value=state.profile.displayName||"";$("profileModalName").textContent=state.profile.displayName||"Profile";$("profileModalUsername").textContent=state.profile.username?"@"+state.profile.username:"";const av=$("profileAvatar");av.innerHTML=state.profile.avatarUrl?'<img src="'+state.profile.avatarUrl.replace(/"/g,"&quot;")+'" alt="">':initials(state.profile.displayName)}
 async function saveProfileChanges(){const n=$("profileName").value.trim();if(!n||n.length>40)return $("profileEditError").textContent="Enter a display name up to 40 characters.";try{await updateDoc(doc(db,"users",state.user.uid),{displayName:n});state.profile.displayName=n;profileCache.set(state.user.uid,state.profile);await updateProfile(state.user,{displayName:n});$("homeGreeting").textContent="Welcome, "+n;$("profileBtn").title=n;closeModal();renderChats();toast("Profile updated.")}catch(e){$("profileEditError").textContent=errText(e)}}
 async function uploadAvatar(file){if(!file||!file.type.startsWith("image/"))return toast("Choose an image.");if(file.size>5*1024*1024)return toast("Maximum profile image size is 5 MB.");try{const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,"_"),r=ref(storage,"avatars/"+state.user.uid+"/"+Date.now()+"_"+safe);await uploadBytes(r,file);const url=await getDownloadURL(r);await updateDoc(doc(db,"users",state.user.uid),{avatarUrl:url});state.profile.avatarUrl=url;profileEdit();toast("Profile photo updated.");renderChats()}catch(e){toast("Photo upload failed: "+errText(e))}}
 
+$("talkAdminAuth").onclick=talkToAdmin;$("talkAdminHome").onclick=talkToAdmin;$("talkAdminCenter").onclick=talkToAdmin;
 $("authForm").onsubmit=e=>{e.preventDefault();$("authForm").dataset.mode==="signup"?signUp():signIn()};
-$("authSwitch").onclick=()=>showAuth($("authForm").dataset.mode==="signup"?"signin":"signup");$("passwordToggle").onclick=()=>{const p=$("password"),b=$("passwordToggle");const show=p.type==="password";p.type=show?"text":"password";b.textContent=show?"Hide":"Show";b.setAttribute("aria-label",show?"Hide password":"Show password")};$("forgot").onclick=resetPassword;$("saveProfile").onclick=saveProfile;$("newChatBtn").onclick=()=>openModal("newChatModal");$("groupBtn").onclick=()=>openModal("groupModal");$("newChatCreate").onclick=newChat;$("newChatUser").oninput=()=>{clearTimeout(userSearchTimer);userSearchTimer=setTimeout(searchUsers,350)};$("newChatUser").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();newChat()}};$("groupCreate").onclick=createGroup;$("closeNewChat").onclick=closeModal;$("closeGroup").onclick=closeModal;$("closeProfile").onclick=closeModal;$("saveProfileChanges").onclick=saveProfileChanges;$("profileBtn").onclick=profileEdit;$("signOut").onclick=()=>signOut(auth);$("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";applyTheme()};$("backBtn").onclick=closeChat;$("messageForm").onsubmit=e=>{e.preventDefault();sendMessage()};$("attachBtn").onclick=()=>$("fileInput").click();$("fileInput").onchange=e=>{sendFile(e.target.files[0]);e.target.value=""};$("messageInput").oninput=()=>{updateCount();setTyping(Boolean($("messageInput").value.trim()))};$("replyCancel").onclick=()=>{state.reply=null;$("replybar").hidden=true};$("chatSearchBtn").onclick=()=>{$("chatTools").classList.toggle("open");if($("chatTools").classList.contains("open"))$("chatSearch").focus()};$("chatSearch").oninput=e=>{state.chatSearch=e.target.value.toLowerCase();renderMessages()};$("manageBtn").onclick=addMember;$("inviteBtn").onclick=invite;$("profileFile").onchange=e=>uploadAvatar(e.target.files[0]);$("chatSearchHome").oninput=e=>{state.search=e.target.value;renderChats()};document.querySelectorAll("[data-chat-filter]").forEach(b=>b.onclick=()=>{state.chatFilter=b.dataset.chatFilter;renderChats()});document.querySelectorAll("[data-footer-action]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-footer-action]").forEach(x=>x.classList.toggle("active",x===b));if(b.dataset.footerAction==="chats"){state.chatFilter="all";renderChats()}else if(b.dataset.footerAction==="people"){openModal("newChatModal")}else if(b.dataset.footerAction==="settings"){openModal("settingsModal")}});$("settingsThemeBtn").onclick=()=>$("themeBtn").click();$("settingsNotificationsBtn").onclick=async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return}if(Notification.permission==="granted"){toast("Browser notifications are already enabled.");return}if(Notification.permission==="denied"){toast("Notifications are blocked in browser site settings.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"New-message notifications enabled.":"Notification permission was not granted.")}catch{toast("Could not enable notifications in this browser.")}};$("settingsProfileBtn").onclick=()=>{closeModal();profileEdit()};$("closeSettings").onclick=closeModal;$("settingsSignOut").onclick=()=>signOut(auth);$("closeFatal").onclick=()=>location.reload();document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal()}));
+$("authSwitch").onclick=()=>showAuth($("authForm").dataset.mode==="signup"?"signin":"signup");$("passwordToggle").onclick=()=>{const p=$("password"),b=$("passwordToggle");const show=p.type==="password";p.type=show?"text":"password";b.textContent=show?"Hide":"Show";b.setAttribute("aria-label",show?"Hide password":"Show password")};$("forgot").onclick=resetPassword;$("saveProfile").onclick=saveProfile;$("newChatBtn").onclick=()=>openModal("newChatModal");$("groupBtn").onclick=()=>openModal("groupModal");$("newChatCreate").onclick=newChat;$("newChatUser").oninput=()=>{clearTimeout(userSearchTimer);userSearchTimer=setTimeout(searchUsers,350)};$("newChatUser").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();newChat()}};$("groupCreate").onclick=createGroup;$("closeNewChat").onclick=closeModal;$("closeGroup").onclick=closeModal;$("closeProfile").onclick=closeModal;$("saveProfileChanges").onclick=saveProfileChanges;$("profileBtn").onclick=profileEdit;$("signOut").onclick=signOutUser;$("themeBtn").onclick=()=>{state.theme=state.theme==="dark"?"light":"dark";applyTheme()};$("backBtn").onclick=closeChat;$("messageForm").onsubmit=e=>{e.preventDefault();sendMessage()};$("attachBtn").onclick=()=>$("fileInput").click();$("fileInput").onchange=e=>{sendFile(e.target.files[0]);e.target.value=""};$("messageInput").oninput=()=>{updateCount();setTyping(Boolean($("messageInput").value.trim()))};$("replyCancel").onclick=()=>{state.reply=null;$("replybar").hidden=true};$("chatSearchBtn").onclick=()=>{$("chatTools").classList.toggle("open");if($("chatTools").classList.contains("open"))$("chatSearch").focus()};$("chatSearch").oninput=e=>{state.chatSearch=e.target.value.toLowerCase();renderMessages()};$("manageBtn").onclick=addMember;$("inviteBtn").onclick=invite;$("profileFile").onchange=e=>uploadAvatar(e.target.files[0]);$("chatSearchHome").oninput=e=>{state.search=e.target.value;renderChats()};document.querySelectorAll("[data-chat-filter]").forEach(b=>b.onclick=()=>{state.chatFilter=b.dataset.chatFilter;renderChats()});document.querySelectorAll("[data-footer-action]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-footer-action]").forEach(x=>x.classList.toggle("active",x===b));if(b.dataset.footerAction==="chats"){state.chatFilter="all";renderChats()}else if(b.dataset.footerAction==="people"){openModal("newChatModal")}else if(b.dataset.footerAction==="settings"){openModal("settingsModal")}});$("settingsThemeBtn").onclick=()=>$("themeBtn").click();$("settingsNotificationsBtn").onclick=async()=>{if(!("Notification" in window)){toast("This browser does not support notifications.");return}if(Notification.permission==="granted"){toast("Browser notifications are already enabled.");return}if(Notification.permission==="denied"){toast("Notifications are blocked in browser site settings.");return}try{const p=await Notification.requestPermission();toast(p==="granted"?"New-message notifications enabled.":"Notification permission was not granted.")}catch{toast("Could not enable notifications in this browser.")}};$("settingsProfileBtn").onclick=()=>{closeModal();profileEdit()};$("closeSettings").onclick=closeModal;$("settingsSignOut").onclick=signOutUser;$("closeFatal").onclick=()=>location.reload();document.querySelectorAll(".modal-backdrop").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal()}));
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&state.user){setConnection(navigator.onLine);if(state.active)markVisibleRead();}});
 if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data?.type==="QAVLI_OPEN_CHAT"&&e.data.chatId){const c=state.chats.find(x=>x.id===e.data.chatId);if(c)openChat(c)}})}
 window.addEventListener("online",()=>{setConnection(true);if(state.user)toast("Back online.")});window.addEventListener("offline",()=>{setConnection(false);toast("You are offline.")});

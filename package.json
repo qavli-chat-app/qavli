@@ -1,0 +1,15 @@
+{
+  "name": "qavli",
+  "private": true,
+  "version": "2.3.0",
+  "type": "module",
+  "scripts": {
+    "check": "node --check js/app.js && node --check sw.js && node --check tests/firestore-rules.test.mjs",
+    "test": "node --test tests/firestore-rules.test.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

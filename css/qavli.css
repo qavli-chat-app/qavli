@@ -571,3 +571,42 @@ body:not(.dark) .toast{background:#211536;color:#fff}
 .chat-row-unread-count{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:22px;height:22px;padding:0 6px;margin-left:auto;border-radius:999px;background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff;font-size:11px;font-weight:900;line-height:1;box-shadow:0 0 16px rgba(139,92,246,.32)}
 .chat-row.has-unread .chat-copy{min-width:0}.chat-row.has-unread .chat-copy small{color:#e5d9ff;font-weight:750}
 body:not(.dark) .chat-row-unread-count{color:#fff}
+
+/* QAVLI PRO MAX — Talk to Admin entry points */
+.talk-admin{width:100%;display:flex;align-items:center;gap:13px;text-align:left;padding:14px 15px;margin:12px 0 6px;border:1px solid rgba(23,63,95,.16);border-radius:18px;background:linear-gradient(135deg,rgba(23,63,95,.08),rgba(245,182,66,.14));color:var(--text);box-shadow:0 8px 20px rgba(16,47,72,.06);transition:transform .16s,border-color .16s}
+.talk-admin:hover{transform:translateY(-1px);border-color:rgba(245,182,66,.75)}
+.talk-admin:disabled{opacity:.6;cursor:wait}
+.talk-admin-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#f9cb70,#f5b642);color:#102f48;font-size:23px;font-weight:900}
+.talk-admin strong{display:block;font-size:14px;font-weight:900}
+.talk-admin small{display:block;margin-top:4px;color:var(--muted);font-size:11px;line-height:1.45}
+.talk-admin-home{margin-top:12px}
+.dark .talk-admin{background:linear-gradient(135deg,rgba(23,63,95,.45),rgba(245,182,66,.10));border-color:#294254;color:var(--text)}
+.talk-admin:focus-visible{outline:3px solid rgba(245,182,66,.75);outline-offset:3px}
+@media(max-width:360px){.talk-admin{padding:11px;gap:9px}.talk-admin-icon{flex-basis:36px;width:36px;height:36px}}
+
+
+/* Center-screen premium gold Talk to Admin call-to-action */
+#home .talk-admin-center{
+  width:min(100%,360px);min-height:78px;margin:26px auto 0;padding:14px 16px;
+  display:flex;align-items:center;gap:13px;text-align:left;cursor:pointer;
+  border:1px solid rgba(255,210,112,.78);border-radius:20px;
+  background:linear-gradient(115deg,#fff0bd 0%,#f7c65d 34%,#e6a72e 68%,#ffdf8c 100%);
+  color:#20243a;box-shadow:0 12px 30px rgba(198,137,27,.24),inset 0 1px 0 rgba(255,255,255,.88);
+  position:relative;overflow:hidden;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+#home .talk-admin-center:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.34) 48%,transparent 72%);transform:translateX(-110%);transition:transform .45s ease}
+#home .talk-admin-center:hover{transform:translateY(-2px);box-shadow:0 17px 36px rgba(198,137,27,.32),inset 0 1px 0 rgba(255,255,255,.9);filter:saturate(1.06)}
+#home .talk-admin-center:hover:before{transform:translateX(110%)}
+#home .talk-admin-center:active{transform:translateY(0)}
+#home .talk-admin-center:disabled{opacity:.65;cursor:wait;transform:none}
+#home .talk-admin-center:focus-visible{outline:3px solid #7657ff;outline-offset:4px}
+#home .talk-admin-center-icon{flex:0 0 46px;width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(145deg,#fff8df,#f4c04f);border:1px solid rgba(132,87,8,.2);box-shadow:0 4px 12px rgba(119,76,7,.14);font-size:25px;color:#69440b}
+#home .talk-admin-center-copy{display:block;flex:1;min-width:0}
+#home .talk-admin-center-copy strong{display:block;font-size:16px;font-weight:950;letter-spacing:-.02em}
+#home .talk-admin-center-copy small{display:block;margin-top:5px;font-size:11px;line-height:1.4;color:#574018}
+#home .talk-admin-center-copy small b{font-weight:900;color:#35260d}
+#home .talk-admin-center-arrow{font-size:23px;font-weight:900;color:#69440b}
+#home .talk-admin-center-note{font-size:11px!important;margin:10px auto 0!important;color:var(--muted)!important}
+@media(max-width:480px){#home .empty-main{padding:18px}#home .empty-card{padding:30px 18px}#home .talk-admin-center{margin-top:22px;padding:13px;gap:10px;border-radius:17px}#home .talk-admin-center-icon{flex-basis:41px;width:41px;height:41px;border-radius:13px}#home .talk-admin-center-copy strong{font-size:15px}}
+@media(prefers-reduced-motion:reduce){#home .talk-admin-center,#home .talk-admin-center:before{transition:none}}
+body.dark #home .talk-admin-center{border-color:rgba(255,219,133,.82);box-shadow:0 12px 30px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.65)}
