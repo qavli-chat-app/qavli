@@ -4,29 +4,51 @@ on:
   pull_request:
     branches: ["main"]
   push:
-    branches: ["qavli-pro-hardening"]
+    branches:
+      - main
+      - qavli-pro-free-audit
+      - qavli-pro-hardening
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: qavli-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
+    name: Syntax and Firestore rules tests
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
       - name: Set up Java for Firestore emulator
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
       - name: Check JavaScript syntax
         run: npm run check
+
       - name: Test Firestore security rules in emulator
-        run: npx firebase emulators:exec --only firestore --project demo-qavli "npm test"
+        run: npx firebase emulators:exec --only firestore --project demo-qavli "npm test" --non-interactive
