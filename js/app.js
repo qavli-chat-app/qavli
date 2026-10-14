@@ -134,7 +134,8 @@ async function postStatus(e){
   }catch(err){$("statusError").textContent="Could not post status: "+errText(err)+" If rules were just updated, deploy them first."}
   finally{setBusy(b,false)}
 }
-\nfunction showHome(){screen("home");document.querySelectorAll("[data-footer-action]").forEach(b=>b.classList.toggle("active",b.dataset.footerAction==="chats"));if(statusUnsub){statusUnsub();statusUnsub=null}renderChats()}
+
+function showHome(){screen("home");document.querySelectorAll("[data-footer-action]").forEach(b=>b.classList.toggle("active",b.dataset.footerAction==="chats"));if(statusUnsub){statusUnsub();statusUnsub=null}renderChats()}
 function showChat(){screen("chat");document.querySelector("#chat .app-shell").classList.add("chat-open")}
 function closeChat(){clearChatListeners();state.active=null;state.messages=[];document.querySelector("#chat .app-shell").classList.remove("chat-open");showHome()}
 function avatarHTML(profile,name){const src=profile?.avatarUrl;if(src)return '<div class="avatar"><img src="'+src.replace(/"/g,"&quot;")+'" alt=""></div>';return '<div class="avatar">'+initials(name)+"</div>"}
