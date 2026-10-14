@@ -178,7 +178,7 @@ function syncUnreadListeners(chats){
   unreadListeners.set(c.id,unsub);
  }
 }
-function startHomeListener(){clearAllListeners();let firstSnapshot=true;const q=query(collection(db,"chats"),where("members","array-contains",state.user.uid),limit(80));const unsub=onSnapshot(q,snap=>{const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.lastActivityAt?.toMillis?.()||0)-(a.lastActivityAt?.toMillis?.()||0));firstSnapshot=false;state.chats=next;syncUnreadListeners(next);renderChats();clearTimeout(window.qavliBootTimer)},e=>{toast("Could not load chats: "+errText(e));renderChatsError(e)});state.unsubs=[unsub]}
+function startHomeListener(){clearAllListeners();for(const unsub of unreadListeners.values()){try{unsub()}catch{}}unreadListeners.clear();unreadCounts.clear();unreadLatestIds.clear();let firstSnapshot=true;const q=query(collection(db,"chats"),where("members","array-contains",state.user.uid),limit(80));const unsub=onSnapshot(q,snap=>{const next=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.lastActivityAt?.toMillis?.()||0)-(a.lastActivityAt?.toMillis?.()||0));firstSnapshot=false;state.chats=next;syncUnreadListeners(next);renderChats();clearTimeout(window.qavliBootTimer)},e=>{toast("Could not load chats: "+errText(e));renderChatsError(e)});state.unsubs=[unsub]}
 function renderChatsError(e){
  const list=$("chatList");list.innerHTML="";
  const card=document.createElement("div");card.className="empty-card";card.style.padding="25px";
@@ -208,7 +208,7 @@ function renderChats(){
   const b=document.createElement("button");b.type="button";b.className="chat-row"+(state.active?.id===c.id?" selected":"");
   const p=chatProfile(c);b.innerHTML=avatarHTML(p,p.displayName)+'<div class="chat-copy"><strong></strong><small></small></div>';
   b.querySelector("strong").textContent=p.displayName;b.querySelector("small").textContent=c.lastMessage||"Start a conversation";
-   if(chatIsUnread(c)){b.classList.add("has-unread");const count=document.createElement("span");count.className="chat-row-unread-count";count.textContent=chatUnreadCount(c)>99?"99+":String(chatUnreadCount(c));count.title=chatUnreadCount(c)+" unread messages";count.setAttribute("aria-label",count.title);b.querySelector(".chat-copy").append(count)}
+   if(chatIsUnread(c)){const n=chatUnreadCount(c);b.classList.add("has-unread");b.setAttribute("aria-label",p.displayName+", "+n+" unread message"+(n===1?"":"s"));const dot=document.createElement("span");dot.className="chat-unread-dot";dot.setAttribute("aria-hidden","true");const count=document.createElement("span");count.className="chat-row-unread-count";count.textContent=n>99?"99+":String(n);count.title=n+" unread messages";count.setAttribute("aria-label",count.title);const indicators=document.createElement("span");indicators.className="chat-unread-indicators";indicators.append(dot,count);b.append(indicators)}
    b.onclick=()=>openChat(c);
   const pin=document.createElement("button");pin.type="button";pin.className="pin-chat"+(state.pinnedChats.has(c.id)?" pinned":"");pin.title=state.pinnedChats.has(c.id)?"Unpin chat":"Pin chat";pin.setAttribute("aria-label",pin.title);pin.textContent=state.pinnedChats.has(c.id)?"★":"☆";
   pin.onclick=e=>{e.stopPropagation();if(state.pinnedChats.has(c.id))state.pinnedChats.delete(c.id);else state.pinnedChats.add(c.id);localStorage.setItem("qavli-pinned-chats",JSON.stringify([...state.pinnedChats]));renderChats();toast(state.pinnedChats.has(c.id)?"Chat pinned on this device.":"Chat unpinned.")};
